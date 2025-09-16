@@ -86,15 +86,53 @@ class mainController extends main
   /**
    * check authentication for API call "the value of the token id"
    */
+
+  public function extractUrlParams(){
+		$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		$uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
+
+		// find position of "api"
+		$pos = array_search('api', $uri);
+
+		if ($pos !== false) {
+			// return everything from "api" onward
+			// return array_slice($uri, $pos + 3);
+      $params = array_slice($uri, $pos + 2);
+
+      $secureParams = [];
+      foreach ($params as $param) {
+          // pass each param to getSecureData
+          $secureParams[] = $this->getSecureData($param);
+      }
+
+      return $secureParams;
+
+		}
+
+    // getSecureData
+		return []; // return empty if "api" not found
+	}
+
+  public function extractUrlParamsFull(){
+		$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		$uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
+    $index = array_search('api', $uri);
+    return ["CONTROLLER_INDEX" => $index + 2
+    // , "METHOD_INDEX" => $index + 3
+    ];
+	}  
+
   public function callMethod($object)
   {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $uri = explode('/', $uri);
     // 
-    $action = $uri[METHOD_INDEX];
+    $action = 'main';
+    // $action = $uri[$this->extractUrlParamsFull()['METHOD_INDEX']];    
     if ($action)
       $action .= 'API';
     if (method_exists($object, "$action")) {
+      // $this->getResponse(200, $action);            
       $object->$action();
     } else {
       $this->getResponse(400);
@@ -128,9 +166,11 @@ class mainController extends main
     $dataMsg[503] = $status == "503" ? $msg ? $msg : $default503 : $default503;
     $dataMsg[422] = $status == "422" ? $msg ? $msg : $default422 : $default422;
 
-    $responseArray[$this->encrypt('message')] = $dataMsg[$status] ? ($dataMsg[$status]) : $this->encrypt($defaultError);
-    if ($status == "200")
-      $responseArray[$this->encrypt('dataObject')] = $this->dataArray;
+    $responseArray[$this->encrypt('message')] = !empty($msg) ? $msg : $dataMsg[$status];
+    // $responseArray[$this->encrypt('message')] = $dataMsg[$status] ? $dataMsg[$status] : $defaultError;    
+    // 
+
+    if ($status == "200") $responseArray[$this->encrypt('dataObject')] = $this->dataArray;
 
     echo json_encode($responseArray);
     exit(0);

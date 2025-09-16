@@ -1,6 +1,6 @@
 <?php
-define("CONTROLLER_INDEX", value: 3);
-define("METHOD_INDEX", 4);
+// define("CONTROLLER_INDEX", value: 3);
+// define("METHOD_INDEX", 4);
 define("DEFAULT_PASSWORD", 123456);
 define("TIMEZONE", "Asia/Amman");
 define("DOMAIN_URL", "http://jolt-dl-ho-mac119-2.local");
@@ -12,15 +12,15 @@ define("MEDIA_UPLOAD_URL", DOMAIN_URL . "/uploads");
 // define("LOGIN_URL", ROOTURL);
 // define("ADMIN_URL", ROOTURL . "admin");
 // DB CONFIG "LOCALHOST"
-// define("DB_HOST", "localhost");
-// define("DB_NAME", "farhetomry");
-// define("DB_USER", "root");
-// define("DB_PASS", "");
+define("DB_HOST", "localhost");
+define("DB_NAME", "test");
+define("DB_USER", "root");
+define("DB_PASS", "");
 // DB CONFIG "sooq-media.com"
-define("DB_HOST","localhost");
-define("DB_NAME","yxlplomy_game");
-define("DB_USER","yxlplomy_game");
-define("DB_PASS","husinalwesi456*(hhH");
+// define("DB_HOST","localhost");
+// define("DB_NAME","yxlplomy_game");
+// define("DB_USER","yxlplomy_game");
+// define("DB_PASS","husinalwesi456*(hhH");
 // DB CONFIG
 // EMAIL SETTING
 define("Email_TITLE", "SOOQ.COM");

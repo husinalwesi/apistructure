@@ -1,38 +1,70 @@
 <?php
-class admin extends mainController
+class admins extends mainController
 {
-	var $table = "admin_users";
-	var $querySelector = array('id', 'full_name', 'username', 'email', 'img', 'status', 'is_deleted', 'created_date');
+	var $table = "admin";
+	var $querySelector = array('id', 'username');
 	public function __construct()
 	{
 		$this->callMethod($this);
 	}
 
-
-	public function listAPI()
+	public function mainAPI()
 	{
-		$this->setAllowedMethod("GET");
+		$params = $this->extractUrlParams();
+		if(count($params) === 0 && $this->isAllowedMethod('GET')) {
+			$this->getItems();
+		} elseif(count($params) === 1 && $this->isAllowedMethod('GET')) {
+			$this->getItemByID($params[0]);
+		} elseif(count($params) === 0 && $this->isAllowedMethod('POST')) {
+			$this->createItem();
+		} elseif(count($params) === 1 && $this->isAllowedMethod('PUT')) {
+			$this->updateItem($params[0]);
+		} elseif(count($params) === 1 && $this->isAllowedMethod('DELETE')) {
+			$this->deleteItem($params[0]);
+		}
+
+      $this->getResponse(422, "Method not supported");	
+	}
+
+	public function getItems(){
 		$this->checkAuth();
-		// 
-		$status = $this->getSecureParams("status");
-		$handlePagination = $this->handlePagination();
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		// 
-		$where = "";
-		if ($status == "active")
-			$where = "status='1' and is_deleted='0'";
-		else if ($status == "inactive")
-			$where = "status='0' and is_deleted='0'";
-		else if ($status == "deleted")
-			$where = "is_deleted='1'";
-		// 
 		$data = array();
-		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table where $where $handlePagination"));
-		// 
-		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
+		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table"));
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
+
+	public function getItemByID($userID){
+		$this->checkAuth();
+		$querySelectorString = $this->getQuerySelector($this->querySelector);
+		// $this->getResponse(200, "select $querySelectorString from $this->table where CAST(id AS CHAR)='$userID'");				
+		// $result = $this->queryResponse("select $querySelectorString from $this->table where id='$userID'");
+		$result = $this->queryResponse("select $querySelectorString from $this->table where CAST(id AS CHAR)='$userID'");		
+		if(!$result || count($result) === 0) $this->getResponse(404, "No data found for the given ID.");
+		$data = array();		
+		$data = $this->modelAllData($result);		
+		if(!$data || count($data) === 0) $this->getResponse(404, "No data found for the given ID.");
+		$this->dataArray = $data[0];
+		$this->getResponse(200);		
+	}
+	/////////////////////////////////////////////////////////////
+
+	public function createItem(){
+		$this->checkAuth();
+		$this->getResponse(200);
+	}
+
+	public function updateItem($userID){
+		$this->checkAuth();
+		$this->getResponse(200);
+	}
+	
+	public function deleteItem($userID){
+		$this->checkAuth();
+		$this->getResponse(200);
+	}
+
 
 	public function profileAPI()
 	{
@@ -306,26 +338,28 @@ class admin extends mainController
 	public function modelAdminData($temp)
 	{
 		$userID = +$temp['id'];
-		$lastLoginDetails = $this->getLastUserLoginDetails($userID);
+		$username = $temp['username'];		
+		// $lastLoginDetails = $this->getLastUserLoginDetails($userID);
 		$data = array();
 
-		if ($temp['basicAuth'])
-			$data['authentication'] = $temp['basicAuth'];
+		// if ($temp['basicAuth'])
+		// 	$data['authentication'] = $temp['basicAuth'];
 
 		$data['id'] = $userID;
-		$data['username'] = $temp['username'];
-		$data['fullName'] = $temp['full_name'];
-		$data['email'] = $temp['email'];
-		$data['createdDate'] = $this->timeStampToDate($temp['created_date'], "dateTime");
-		$data['isDeleted'] = $this->toBoolean($temp['is_deleted']);
-		$data['image'] = $temp['img'];
-		$data['isActive'] = $this->toBoolean($temp['status']);
-		// 
-		$data['loginDetails'] = $lastLoginDetails ? array() : false;
-		if ($lastLoginDetails) {
-			$data['loginDetails']['ip'] = $lastLoginDetails['ip'];
-			$data['loginDetails']['createdDate'] = $lastLoginDetails['created_date'] ? $this->timeStampToDate($lastLoginDetails['created_date'], "dateTime") : '';
-		}
+		$data['username'] = $temp['username'];		
+		// $data['username'] = $temp['username'];
+		// $data['fullName'] = $temp['full_name'];
+		// $data['email'] = $temp['email'];
+		// $data['createdDate'] = $this->timeStampToDate($temp['created_date'], "dateTime");
+		// $data['isDeleted'] = $this->toBoolean($temp['is_deleted']);
+		// $data['image'] = $temp['img'];
+		// $data['isActive'] = $this->toBoolean($temp['status']);
+		// // 
+		// $data['loginDetails'] = $lastLoginDetails ? array() : false;
+		// if ($lastLoginDetails) {
+		// 	$data['loginDetails']['ip'] = $lastLoginDetails['ip'];
+		// 	$data['loginDetails']['createdDate'] = $lastLoginDetails['created_date'] ? $this->timeStampToDate($lastLoginDetails['created_date'], "dateTime") : '';
+		// }
 		return $data;
 	}
 

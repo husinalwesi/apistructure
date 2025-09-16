@@ -32,10 +32,11 @@ class main
 
   public function getURLParameterByOrder($order = 1)
   {
+    
     // Get slash parameter in the URL.
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $uri = explode('/', $uri);
-    return $uri[METHOD_INDEX + $order];
+    return $uri[$this->extractUrlParamsFull()['METHOD_INDEX'] + $order];
   }
 
   public function getHeaderParams($var)
@@ -67,6 +68,11 @@ class main
     return $default;
   }
 
+    public function getSecureData($var, $default = '')
+  {
+    return !empty($var) ? strip_tags($var) : $default;
+  }
+
   public function getPayload()
   {
     // Converts it into a PHP object
@@ -83,9 +89,22 @@ class main
       $this->getResponse(422, "Method not supported");
   }
 
+  public function isAllowedMethod($method)
+  {
+    $requestMethod = $_SERVER["REQUEST_METHOD"];
+    return strtoupper($requestMethod) === strtoupper($method);
+  }
+
+
+  public function notAllowedUrlParams()
+  {
+    $this->getResponse(400, "Invalid request URL.");
+  }  
+
   public function getQuerySelector($array)
   {
-    return implode(",", $array);
+    // return implode(",", $array);
+    return "*";
   }
 
   public function toBoolean($str)

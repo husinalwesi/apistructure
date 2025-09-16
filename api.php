@@ -1,5 +1,12 @@
 <?php
 
+function extractUrlParamsFull(){
+		$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		$uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
+    $index = array_search('api', $uri);
+    return ["CONTROLLER_INDEX" => $index + 2, "METHOD_INDEX" => $index + 3];
+	}  
+
 // echo json_encode($_SERVER);
 // exit(0);
 
@@ -70,11 +77,17 @@ $main = new main();
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = explode('/', $uri);
 
-$controller = $uri[CONTROLLER_INDEX];
-$method = $uri[METHOD_INDEX];
 
 
-// echo json_encode($controller);
+		// $this->dataArray = $this->extractUrlParamsFull();
+		// $this->getResponse(200, 'from start');
+
+
+$controller = $uri[extractUrlParamsFull()['CONTROLLER_INDEX']];
+// $method = $uri[extractUrlParamsFull()['METHOD_INDEX']];
+
+
+// echo json_encode($method);
 // exit();
 
 
@@ -84,17 +97,17 @@ if (
             $controller,
             array(
                 // 'countrycode',
-                // 'admin',
-                'comments',
-                'rank',
-                'user'
+                'admins',
+                // 'comments',
+                // 'rank',
+                // 'user'
                 // 'content',
                 // 'category',
                 // 'media',
                 // 'blog'
             )
         )
-    ) || !isset($method)
+    )
 ) {
     // echo json_encode('1');
     // exit();
