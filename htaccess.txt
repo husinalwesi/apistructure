@@ -1,0 +1,18 @@
+.htaccess file in the root
+in mac you can put the file in the xampp/htdocs/.htaccess
+
+containing the following: (to remove and rewrite index.php)
+
+RewriteEngine On
+RewriteBase /
+
+# Remove index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/index\.php/(.*)$ /api/$1 [L,R=301]
+RewriteRule ^api/index\.php$ /api/ [L,R=301]
+
+# Rewrite API URLs to remove index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ /api/index.php/$1 [L,QSA]
