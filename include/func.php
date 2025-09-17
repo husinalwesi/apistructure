@@ -68,6 +68,25 @@ class main
     return $default;
   }
 
+      public function getSecureParamsPut()
+  {
+    $putData = file_get_contents("php://input");
+		$parsed = [];
+		parse_str($putData, $parsed);
+
+		foreach ($parsed as $key => $value) {
+			$parsed[$key] = $this->getSecureData($value);
+		}
+
+    return $parsed;
+  }
+
+    public function getSecureParamsBody($var, $default = 0)
+  {
+    if (isset($_POST[$var])) return strip_tags($_POST[$var]);
+    return $default;
+  }
+
     public function getSecureData($var, $default = '')
   {
     return !empty($var) ? strip_tags($var) : $default;

@@ -2,9 +2,12 @@
 class admins extends mainController
 {
 	var $table = "admin";
-	var $querySelector = array('id', 'username');
+	var $querySelector = array('id', 'username', 'isdeleted');
 	public function __construct()
 	{
+		// handle header params // token // language // and translate for api response message
+		// handle file upload - single and multiple
+		// in put i used x-www-form-urlencoded i guess we will change it, since it should be a multiform to accept files, we need to control this one.
 		$this->callMethod($this);
 	}
 
@@ -26,43 +29,71 @@ class admins extends mainController
       $this->getResponse(422, "Method not supported");	
 	}
 
-	public function getItems(){
+	public function getItems(){		
 		$this->checkAuth();
-		$querySelectorString = $this->getQuerySelector($this->querySelector);
+		$querySelectorString = $this->getQuerySelector($this->querySelector);		
 		$data = array();
-		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table"));
+		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table where isdeleted='0'"));
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
 
-	public function getItemByID($userID){
-		$this->checkAuth();
+	public function getItemByIDFn($userID){
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		// $this->getResponse(200, "select $querySelectorString from $this->table where CAST(id AS CHAR)='$userID'");				
-		// $result = $this->queryResponse("select $querySelectorString from $this->table where id='$userID'");
-		$result = $this->queryResponse("select $querySelectorString from $this->table where CAST(id AS CHAR)='$userID'");		
-		if(!$result || count($result) === 0) $this->getResponse(404, "No data found for the given ID.");
+		$result = $this->queryResponse("select $querySelectorString from $this->table where CAST(id AS CHAR)='$userID'");
+		if(!$result || count($result) === 0) return null;
 		$data = array();		
 		$data = $this->modelAllData($result);		
-		if(!$data || count($data) === 0) $this->getResponse(404, "No data found for the given ID.");
-		$this->dataArray = $data[0];
+		if(!$data || count($data) === 0) return null;
+		return $data[0];
+	}
+
+	public function getItemByID($userID){
+		$this->checkAuth();
+		$data = $this->getItemByIDFn($userID);
+		if(!$data) $this->getResponse(404, "No data found for the given ID.");
+		$this->dataArray = $data;
 		$this->getResponse(200);		
 	}
 	/////////////////////////////////////////////////////////////
 
 	public function createItem(){
 		$this->checkAuth();
-		$this->getResponse(200);
+
+		$params = array(
+			'id' => '',
+			'username' => $this->getSecureParamsBody('username'),
+			'isdeleted' => ''
+		);
+		if (!$newUserID = $this->queryInsert($this->table, $params)) $this->getResponse(503, "An Error Occure.");
+
+		$data = $this->getItemByIDFn($newUserID);
+
+		$this->dataArray = $data;		
+		$this->getResponse(200, 'created successfully..');
 	}
 
 	public function updateItem($userID){
 		$this->checkAuth();
-		$this->getResponse(200);
+		$putData = $this->getSecureParamsPut();
+		if(!$putData['username']) $this->getResponse(503, "Missing parameter username");
+		$params = array();
+		$params['username'] = $putData['username'];
+		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'")) $this->getResponse(503, "An Error Occure.");
+
+		$data = $this->getItemByIDFn($userID);
+
+		$this->dataArray = $data;
+		$this->getResponse(200, 'updated successfully..');
 	}
 	
 	public function deleteItem($userID){
 		$this->checkAuth();
-		$this->getResponse(200);
+		$params = array();
+		$params['isdeleted'] = 1;
+		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'")) $this->getResponse(503, "An Error Occure.");
+
+		$this->getResponse(200, 'deleted successfully..');
 	}
 
 
@@ -338,7 +369,8 @@ class admins extends mainController
 	public function modelAdminData($temp)
 	{
 		$userID = +$temp['id'];
-		$username = $temp['username'];		
+		// $username = $temp['username'];	
+		// $username = $temp['isdeleted'];	
 		// $lastLoginDetails = $this->getLastUserLoginDetails($userID);
 		$data = array();
 
@@ -347,6 +379,7 @@ class admins extends mainController
 
 		$data['id'] = $userID;
 		$data['username'] = $temp['username'];		
+		$data['isdeleted'] = $temp['isdeleted'];				
 		// $data['username'] = $temp['username'];
 		// $data['fullName'] = $temp['full_name'];
 		// $data['email'] = $temp['email'];
