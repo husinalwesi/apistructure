@@ -32,7 +32,7 @@ class main
 
   public function getURLParameterByOrder($order = 1)
   {
-    
+
     // Get slash parameter in the URL.
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $uri = explode('/', $uri);
@@ -68,26 +68,136 @@ class main
     return $default;
   }
 
-      public function getSecureParamsPut()
+  public function getSecureParamsPut()
   {
     $putData = file_get_contents("php://input");
-		$parsed = [];
-		parse_str($putData, $parsed);
+    $parsed = [];
+    parse_str($putData, $parsed);
 
-		foreach ($parsed as $key => $value) {
-			$parsed[$key] = $this->getSecureData($value);
-		}
-
+    foreach ($parsed as $key => $value) {
+      $parsed[$key] = $this->getSecureData($value);
+    }
     return $parsed;
   }
 
-    public function getSecureParamsBody($var, $default = 0)
+  public function getSecureParamsBody($var, $default = 0)
   {
-    if (isset($_POST[$var])) return strip_tags($_POST[$var]);
+    if (isset($_POST[$var]))
+      return strip_tags($_POST[$var]);
     return $default;
   }
 
-    public function getSecureData($var, $default = '')
+  public function getRequestData()
+  {
+    $method = $_SERVER['REQUEST_METHOD'];
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+    $result = [
+      "fields" => [],
+      "files" => []
+    ];
+
+    // Raw body for PUT/POST/others
+    $raw = file_get_contents("php://input");
+
+    // Handle multipart/form-data (files + fields)
+    if (stripos($contentType, 'multipart/form-data') === 0) {
+      if ($method === 'POST') {
+        $result["fields"] = $_POST;
+        $result["files"] = $_FILES;
+      } else {
+        $raw = file_get_contents("php://input");
+        $boundary = substr($raw, 0, strpos($raw, "\r\n"));
+        $parts = array_slice(explode($boundary, $raw), 1);
+
+        $fields = [];
+        $files = [];
+
+        foreach ($parts as $part) {
+          $part = trim($part);
+          if ($part === "--")
+            continue; // End marker
+
+          // Split headers & body
+          list($rawHeaders, $body) = explode("\r\n\r\n", $part, 2);
+          $body = rtrim($body, "\r\n");
+
+          // Parse headers
+          $headers = [];
+          foreach (explode("\r\n", $rawHeaders) as $header) {
+            if (strpos($header, ':') !== false) {
+              list($hName, $hValue) = explode(':', $header, 2);
+              $headers[strtolower(trim($hName))] = trim($hValue);
+            }
+          }
+
+          // Find the Content-Disposition header
+          if (!isset($headers['content-disposition'])) {
+            continue;
+          }
+
+          if (preg_match('/name="([^"]+)"/', $headers['content-disposition'], $matchName)) {
+            $name = $matchName[1];
+          } else {
+            continue;
+          }
+
+          // Check if it's a file (has filename=)
+          if (preg_match('/filename="([^"]*)"/', $headers['content-disposition'], $matchFile)) {
+            $filename = $matchFile[1];
+            if ($filename !== '') {
+              $tmpPath = tempnam(sys_get_temp_dir(), 'php_put_');
+              file_put_contents($tmpPath, $body);
+
+              $files[$name] = [
+                'name' => $filename,
+                'type' => $headers['content-type'] ?? 'application/octet-stream',
+                'tmp_name' => $tmpPath,
+                'error' => 0,
+                'size' => strlen($body)
+              ];
+            }
+          } else {
+            // Normal field
+            $fields[$name] = $body;
+          }
+        }
+        $result['fields'] = $fields;
+        $result['files'] = $files;
+      }
+    } else if (stripos($contentType, 'application/json') === 0) {
+      $decoded = json_decode($raw, true);
+      if (json_last_error() === JSON_ERROR_NONE) {
+        $result["fields"] = $decoded;
+      }
+    } elseif (stripos($contentType, 'application/x-www-form-urlencoded') === 0) {
+      parse_str($raw, $parsed);
+      $result["fields"] = $parsed;
+    } elseif (stripos($contentType, 'text/plain') === 0) {
+      // Plain text -> wrap into a single field
+      // parse_str($raw, $parsed);
+      // $decoded = json_decode($raw, true);       
+      $result["fields"] = json_decode($raw, true);
+    } else {
+      // Fallback: try query-style parsing
+      parse_str($raw, $parsed);
+      if (!empty($parsed)) {
+        $result["fields"] = $parsed;
+      } else {
+        $result["fields"] = ["raw" => $raw];
+      }
+    }
+
+
+    foreach ($result['fields'] as $key => $value) {
+      $result['fields'][$key] = $this->getSecureData($value);
+    }
+
+    return $result;
+
+  }
+
+  public function getSecureData($var, $default = '')
   {
     return !empty($var) ? strip_tags($var) : $default;
   }
@@ -118,7 +228,7 @@ class main
   public function notAllowedUrlParams()
   {
     $this->getResponse(400, "Invalid request URL.");
-  }  
+  }
 
   public function getQuerySelector($array)
   {
@@ -256,13 +366,15 @@ class main
     );
   }
 
-  public function encrypt($data){
+  public function encrypt($data)
+  {
     // return base64_encode(urldecode($data));
     // return base64_encode($data);
     return $data;
   }
 
-  public function decrypt($data){
+  public function decrypt($data)
+  {
     // return base64_decode($data);
     // return base64_decode(urldecode($data));
     return $data;

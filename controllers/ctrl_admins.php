@@ -14,84 +14,102 @@ class admins extends mainController
 	public function mainAPI()
 	{
 		$params = $this->extractUrlParams();
-		if(count($params) === 0 && $this->isAllowedMethod('GET')) {
+		if (count($params) === 0 && $this->isAllowedMethod('GET')) {
 			$this->getItems();
-		} elseif(count($params) === 1 && $this->isAllowedMethod('GET')) {
+		} elseif (count($params) === 1 && $this->isAllowedMethod('GET')) {
 			$this->getItemByID($params[0]);
-		} elseif(count($params) === 0 && $this->isAllowedMethod('POST')) {
+		} elseif (count($params) === 0 && $this->isAllowedMethod('POST')) {
 			$this->createItem();
-		} elseif(count($params) === 1 && $this->isAllowedMethod('PUT')) {
+		} elseif (count($params) === 1 && $this->isAllowedMethod('PUT')) {
 			$this->updateItem($params[0]);
-		} elseif(count($params) === 1 && $this->isAllowedMethod('DELETE')) {
+		} elseif (count($params) === 1 && $this->isAllowedMethod('DELETE')) {
 			$this->deleteItem($params[0]);
 		}
 
-      $this->getResponse(422, "Method not supported");	
+		$this->getResponse(422, "Method not supported");
 	}
 
-	public function getItems(){		
+	public function getItems()
+	{
 		$this->checkAuth();
-		$querySelectorString = $this->getQuerySelector($this->querySelector);		
+		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
 		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table where isdeleted='0'"));
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
 
-	public function getItemByIDFn($userID){
+	public function getItemByIDFn($userID)
+	{
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$result = $this->queryResponse("select $querySelectorString from $this->table where CAST(id AS CHAR)='$userID'");
-		if(!$result || count($result) === 0) return null;
-		$data = array();		
-		$data = $this->modelAllData($result);		
-		if(!$data || count($data) === 0) return null;
+		if (!$result || count($result) === 0)
+			return null;
+		$data = array();
+		$data = $this->modelAllData($result);
+		if (!$data || count($data) === 0)
+			return null;
 		return $data[0];
 	}
 
-	public function getItemByID($userID){
+	public function getItemByID($userID)
+	{
 		$this->checkAuth();
 		$data = $this->getItemByIDFn($userID);
-		if(!$data) $this->getResponse(404, "No data found for the given ID.");
+		if (!$data)
+			$this->getResponse(404, "No data found for the given ID.");
 		$this->dataArray = $data;
-		$this->getResponse(200);		
+		$this->getResponse(200);
 	}
 	/////////////////////////////////////////////////////////////
 
-	public function createItem(){
+	public function createItem()
+	{
 		$this->checkAuth();
+		$payload = $this->getRequestData();
 
 		$params = array(
 			'id' => '',
-			'username' => $this->getSecureParamsBody('username'),
+			'username' => $payload['fields']['username'],
 			'isdeleted' => ''
 		);
-		if (!$newUserID = $this->queryInsert($this->table, $params)) $this->getResponse(503, "An Error Occure.");
+
+
+		if (!$newUserID = $this->queryInsert($this->table, $params))
+			$this->getResponse(503, "An Error Occure.");
 
 		$data = $this->getItemByIDFn($newUserID);
 
-		$this->dataArray = $data;		
+		$this->dataArray = $data;
 		$this->getResponse(200, 'created successfully..');
 	}
 
-	public function updateItem($userID){
+	public function updateItem($userID)
+	{
 		$this->checkAuth();
-		$putData = $this->getSecureParamsPut();
-		if(!$putData['username']) $this->getResponse(503, "Missing parameter username");
+
+		$payload = $this->getRequestData();
+
+		if (!$payload['fields']['username'])
+			$this->getResponse(503, "Missing parameter username");
 		$params = array();
-		$params['username'] = $putData['username'];
-		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'")) $this->getResponse(503, "An Error Occure.");
+		$params['username'] = $payload['fields']['username'];
+		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'"))
+			$this->getResponse(503, "An Error Occure.");
 
 		$data = $this->getItemByIDFn($userID);
 
 		$this->dataArray = $data;
 		$this->getResponse(200, 'updated successfully..');
 	}
-	
-	public function deleteItem($userID){
+
+	public function deleteItem($userID)
+	{
 		$this->checkAuth();
 		$params = array();
 		$params['isdeleted'] = 1;
-		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'")) $this->getResponse(503, "An Error Occure.");
+		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'"))
+			$this->getResponse(503, "An Error Occure.");
 
 		$this->getResponse(200, 'deleted successfully..');
 	}
@@ -378,8 +396,8 @@ class admins extends mainController
 		// 	$data['authentication'] = $temp['basicAuth'];
 
 		$data['id'] = $userID;
-		$data['username'] = $temp['username'];		
-		$data['isdeleted'] = $temp['isdeleted'];				
+		$data['username'] = $temp['username'];
+		$data['isdeleted'] = $temp['isdeleted'];
 		// $data['username'] = $temp['username'];
 		// $data['fullName'] = $temp['full_name'];
 		// $data['email'] = $temp['email'];
