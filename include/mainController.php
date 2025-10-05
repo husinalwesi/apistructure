@@ -2,7 +2,7 @@
 class mainController extends main
 {
   var $msg = "";
-  var $dataArray = false;
+  var $dataArray = null;
   var $time_zone = 'Asia/Amman';
 
   public function verifyAndGetAuth($data)
@@ -42,85 +42,42 @@ class mainController extends main
 
     // return true;
   }
-
-  public function getCurrentUserDetails($data)
-  {
-    $data = $this->verifyAndGetAuth(false, array('isVerify' => false, 'isPasswordEnabled' => $data->isPasswordEnabled));
-
-    if (!$data)
-      $this->getResponse(401);
-
-    return array(
-      'unFormattedData' => $data[0],
-      'formattedData' => $this->modelAdminData($data[0])
-    );
-
-    // Example Response:
-    //   {
-    //     "unFormattedData": {
-    //         "id": 1,
-    //         "full_name": "Hussein Al-wesi",
-    //         "username": "husin.alwesi",
-    //         "email": "alwesihusin@gmail.com",
-    //         "img": "https://thumbs.dreamstime.com/b/default-avatar-profile-icon-social-media-user-vector-image-icon-default-avatar-profile-icon-social-media-user-vector-image-209162840.jpg",
-    //         "status": 1,
-    //         "is_deleted": "0",
-    //         "created_date": "1634484941"
-    //     },
-    //     "formattedData": {
-    //         "id": 1,
-    //         "username": "husin.alwesi",
-    //         "fullName": "Hussein Al-wesi",
-    //         "email": "alwesihusin@gmail.com",
-    //         "createdDate": "17.10.2021 6:35 pm",
-    //         "isDeleted": false,
-    //         "image": "https://thumbs.dreamstime.com/b/default-avatar-profile-icon-social-media-user-vector-image-icon-default-avatar-profile-icon-social-media-user-vector-image-209162840.jpg",
-    //         "isActive": true,
-    //         "loginDetails": {
-    //             "ip": "91.186.251.85",
-    //             "createdDate": "17.10.2021 10:14 pm"
-    //         }
-    //     }
-    // }
-  }
   /**
    * check authentication for API call "the value of the token id"
    */
 
-  public function extractUrlParams(){
-		$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-		$uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
+  public function extractUrlParams()
+  {
+    $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
 
-		// find position of "api"
-		$pos = array_search('api', $uri);
+    // find position of "api"
+    $pos = array_search('api', $uri);
 
-		if ($pos !== false) {
-			// return everything from "api" onward
-			// return array_slice($uri, $pos + 3);
+    if ($pos !== false) {
       $params = array_slice($uri, $pos + 2);
 
       $secureParams = [];
       foreach ($params as $param) {
-          // pass each param to getSecureData
-          $secureParams[] = $this->getSecureData($param);
+        // pass each param to getSecureData
+        $secureParams[] = $this->getSecureData($param);
       }
 
       return $secureParams;
 
-		}
+    }
+    return []; // return empty if "api" not found
+  }
 
-    // getSecureData
-		return []; // return empty if "api" not found
-	}
-
-  public function extractUrlParamsFull(){
-		$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-		$uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
+  public function extractUrlParamsFull()
+  {
+    $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
     $index = array_search('api', $uri);
-    return ["CONTROLLER_INDEX" => $index + 2
-    // , "METHOD_INDEX" => $index + 3
+    return [
+      "CONTROLLER_INDEX" => $index + 2
     ];
-	}  
+  }
 
   public function callMethod($object)
   {
@@ -128,11 +85,9 @@ class mainController extends main
     $uri = explode('/', $uri);
     // 
     $action = 'main';
-    // $action = $uri[$this->extractUrlParamsFull()['METHOD_INDEX']];    
     if ($action)
       $action .= 'API';
     if (method_exists($object, "$action")) {
-      // $this->getResponse(200, $action);            
       $object->$action();
     } else {
       $this->getResponse(400);
@@ -166,11 +121,8 @@ class mainController extends main
     $dataMsg[503] = $status == "503" ? $msg ? $msg : $default503 : $default503;
     $dataMsg[422] = $status == "422" ? $msg ? $msg : $default422 : $default422;
 
-    $responseArray[$this->encrypt('message')] = !empty($msg) ? $msg : $dataMsg[$status];
-    // $responseArray[$this->encrypt('message')] = $dataMsg[$status] ? $dataMsg[$status] : $defaultError;    
-    // 
-
-    if ($status == "200") $responseArray[$this->encrypt('dataObject')] = $this->dataArray;
+    $responseArray['message'] = !empty($msg) ? $msg : $dataMsg[$status];
+    $responseArray['dataObject'] = $this->dataArray;
 
     echo json_encode($responseArray);
     exit(0);
@@ -201,173 +153,43 @@ class mainController extends main
     $this->getResponse(503);
   }
 
-  // public function uploadImagesBase64($img)
-  // {
-  //   $user_id = 1;
-  //   $img = str_replace('data:image/png;base64,', '', $img);
-  //   $data = base64_decode($img);
-  //   $img_name = uniqid() . "_" . $user_id . ".png";
-  //   $target_file = '../uploads/' . $user_id . "/" . $img_name;
-  //   $success = file_put_contents($target_file, $data);
-  //   // if($success) return "uploaded";
-  //   // else return "unable to upload";
-  //   return $img_name;
-  // }
-
-  // public function makeThumbnails($updir, $img, $img_name)
-  // {
-  //   $thumbnail_width = 250;
-  //   $thumbnail_height = 250;
-  //   $thumb_beforeword = "thumb";
-  //   $arr_image_details = getimagesize($img); // pass id to thumb name
-  //   $original_width = $arr_image_details[0];
-  //   $original_height = $arr_image_details[1];
-  //   if ($original_width > $original_height) {
-  //     $new_width = $thumbnail_width;
-  //     $new_height = intval($original_height * $new_width / $original_width);
-  //   } else {
-  //     $new_height = $thumbnail_height;
-  //     $new_width = intval($original_width * $new_height / $original_height);
-  //   }
-  //   $dest_x = intval(($thumbnail_width - $new_width) / 2);
-  //   $dest_y = intval(($thumbnail_height - $new_height) / 2);
-  //   if ($arr_image_details[2] == 1) {
-  //     $imgt = "ImageGIF";
-  //     $imgcreatefrom = "ImageCreateFromGIF";
-  //   }
-  //   if ($arr_image_details[2] == 2) {
-  //     $imgt = "ImageJPEG";
-  //     $imgcreatefrom = "ImageCreateFromJPEG";
-  //   }
-  //   if ($arr_image_details[2] == 3) {
-  //     $imgt = "ImagePNG";
-  //     $imgcreatefrom = "ImageCreateFromPNG";
-  //   }
-  //   if ($imgt) {
-  //     $old_image = $imgcreatefrom($img);
-  //     $new_image = imagecreatetruecolor($thumbnail_width, $thumbnail_height);
-  //     imagecopyresized($new_image, $old_image, $dest_x, $dest_y, 0, 0, $new_width, $new_height, $original_width, $original_height);
-  //     $imgt($new_image, $updir . $img_name);
-  //   }
-  // }
-
-  public function uploadMedia($folderName)
+  public function uploadMedia($files)
   {
-    if (!$folderName)
-      $this->getResponse(503, "Add Folder Name");
-
     $data = array();
-    foreach ($_FILES as $key => $file) {
-      if ($file['name']) {
-        $extension = explode(".", $file['name']);
-        $extension = $extension[count($extension) - 1];
-        $mg = uniqid() . "_" . $folderName . "." . $extension;
-        $originalImage = "../uploads/$folderName/" . $mg;
-        move_uploaded_file($file['tmp_name'], $originalImage);
-        // 
-        $media = array();
-        $media['uploadeName'] = $mg;
-        $media['originalName'] = $file['name'];
-        $media['url'] = MEDIA_UPLOAD_URL . '/' . $folderName . '/' . $mg;
-        $media['type'] = $file['type'];
-        $media['size'] = $file['size'];
-        $media['created_date'] = time();
-        $data[] = $media;
+    foreach ($files as $key => $file) {
+      $fileName = $file['name'];
+      $fileName = str_replace(' ', '-', $file['name']);
+
+      $mg = uniqid() . "_" . $fileName;
+      $tData = strtotime("today");
+      $uploadDir = "./uploads/$tData/";
+      $originalImage = $uploadDir . $mg;
+
+      // Check if folder exists
+      if (!is_dir($uploadDir)) {
+        if (!mkdir($uploadDir, 0755, true)) {
+          $this->getResponse(500, "Cannot create folder $uploadDir");
+          return;
+        }
+      }
+
+      // Check if folder is writable
+      if (!is_writable($uploadDir)) {
+        $this->getResponse(500, "Folder $uploadDir is not writable");
+        return;
+      }
+
+      // Attempt to move uploaded file
+      if (move_uploaded_file($file['tmp_name'], $originalImage)) {
+        $data[] = '/uploads/' . $tData . '/' . $mg;
+      } else {
+        $this->getResponse(500, "Failed to move uploaded file to $originalImage");
       }
     }
 
-    if (count($data) == 0)
-      $this->getResponse(204);
     return $data;
   }
 
-  // public function uploadMultipartImagesThumbnailsMultiple($user_id = 1)
-  // {
-  //   $img_name = array();
-  //   if (!file_exists("../uploads/$user_id")) {
-  //     mkdir("../uploads/$user_id");
-  //     mkdir("../uploads/thumbnails/$user_id");
-  //   }
-  //   foreach ($_FILES as $imgname => $value) {
-  //     if (is_array($_FILES[$imgname]['name'])) {
-  //       foreach ($_FILES[$imgname]['name'] as $key1 => $value1) {
-  //         if (is_array($value1)) {
-  //           foreach ($value1 as $i => $v) {
-  //             $extension = explode(".", $_FILES[$imgname]['name'][$key1][$i]);
-  //             $extension = $extension[count($extension) - 1];
-  //             $mg = uniqid() . "_" . $user_id . "." . $extension;
-  //             $img_name[$imgname][$key1][$i] = $mg;
-  //             $originalImage = "../uploads/$user_id/" . $mg;
-  //             $action = move_uploaded_file($_FILES[$imgname]['tmp_name'][$key1][$i], $originalImage);
-  //             $img_name[$imgname][$key1][$i] = ROOTIMAGEURL . $mg;
-  //           }
-  //         } else {
-  //           if ($_FILES[$imgname]['name'][$key1]) {
-  //             $extension = explode(".", $_FILES[$imgname]['name'][$key1]);
-  //             $extension = $extension[count($extension) - 1];
-  //             $mg = uniqid() . "_" . $user_id . "." . $extension;
-  //             $img_name[$imgname][$key1] = $mg;
-  //             $originalImage = "../uploads/$user_id/" . $mg;
-  //             $action = move_uploaded_file($_FILES[$imgname]['tmp_name'][$key1], $originalImage);
-  //             $img_name[$imgname][$key1] = ROOTIMAGEURL . $mg;
-  //             //$this->makeMutliPartThumbnails("../uploads/thumbnails/$user_id/",$originalImage,$mg);
-  //           }
-  //         }
-  //       }
-  //     } else {
-  //       if ($_FILES[$imgname]['name']) {
-  //         $extension = explode(".", $_FILES[$imgname]['name']);
-  //         $extension = $extension[count($extension) - 1];
-  //         $mg = uniqid() . "_" . $user_id . "." . $extension;
-  //         $img_name[$imgname] = $mg;
-  //         $originalImage = "../uploads/$user_id/" . $mg;
-  //         $action = move_uploaded_file($_FILES[$imgname]['tmp_name'], $originalImage);
-  //         //$this->makeMutliPartThumbnails("../uploads/thumbnails/$user_id/",$originalImage,$mg);
-  //         $img_name[$imgname] = ROOTIMAGEURL . $mg;
-  //       }
-  //     }
-  //   }
-
-  //   return $img_name;
-  // }
-
-  // public function makeMutliPartThumbnails($updir, $img, $img_name)
-  // {
-  //   return;
-  //   $thumbnail_width = 250;
-  //   $thumbnail_height = 250;
-  //   $thumb_beforeword = "thumb";
-  //   $arr_image_details = getimagesize($img); // pass id to thumb name
-  //   $original_width = $arr_image_details[0];
-  //   $original_height = $arr_image_details[1];
-  //   if ($original_width > $original_height) {
-  //     $new_width = $thumbnail_width;
-  //     $new_height = intval($original_height * $new_width / $original_width);
-  //   } else {
-  //     $new_height = $thumbnail_height;
-  //     $new_width = intval($original_width * $new_height / $original_height);
-  //   }
-  //   $dest_x = intval(($thumbnail_width - $new_width) / 2);
-  //   $dest_y = intval(($thumbnail_height - $new_height) / 2);
-  //   if ($arr_image_details[2] == 1) {
-  //     $imgt = "ImageGIF";
-  //     $imgcreatefrom = "ImageCreateFromGIF";
-  //   }
-  //   if ($arr_image_details[2] == 2) {
-  //     $imgt = "ImageJPEG";
-  //     $imgcreatefrom = "ImageCreateFromJPEG";
-  //   }
-  //   if ($arr_image_details[2] == 3) {
-  //     $imgt = "ImagePNG";
-  //     $imgcreatefrom = "ImageCreateFromPNG";
-  //   }
-  //   if ($imgt) {
-  //     $old_image = $imgcreatefrom($img);
-  //     $new_image = imagecreatetruecolor($thumbnail_width, $thumbnail_height);
-  //     imagecopyresized($new_image, $old_image, $dest_x, $dest_y, 0, 0, $new_width, $new_height, $original_width, $original_height);
-  //     $imgt($new_image, $updir . $img_name);
-  //   }
-  // }
   public function queryInsert($tableName, $params, $flag = 0)
   {
     $db = new db();

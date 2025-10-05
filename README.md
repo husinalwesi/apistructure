@@ -1,1 +1,1 @@
-# event-cms-api
+#apistructure

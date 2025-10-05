@@ -15,7 +15,6 @@ class db extends MConfig
     } catch (PDOException $e) {
       echo "Database Lose Connection";
       exit(0);
-      //echo $e->getMessage();
     }
   }
 
