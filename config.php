@@ -1,4 +1,7 @@
 <?php
+
+define("DEFAULT_LANG", "en");
+
 // DB CONFIG "LOCALHOST"
 define("DB_HOST", "localhost");
 define("DB_NAME", "test");

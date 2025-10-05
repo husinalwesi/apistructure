@@ -121,11 +121,47 @@ class mainController extends main
     $dataMsg[503] = $status == "503" ? $msg ? $msg : $default503 : $default503;
     $dataMsg[422] = $status == "422" ? $msg ? $msg : $default422 : $default422;
 
-    $responseArray['message'] = !empty($msg) ? $msg : $dataMsg[$status];
+    $msgTranslated = !empty($msg) ? $msg : $dataMsg[$status];
+
+    $responseArray['message'] = $this->translate($msgTranslated);
     $responseArray['dataObject'] = $this->dataArray;
 
     echo json_encode($responseArray);
     exit(0);
+  }
+
+  public function getCurrentLang()
+  {
+    $headers = getallheaders();
+    $langFromRequest = isset($headers['lang']) ? $headers['lang'] : DEFAULT_LANG;
+    if (!$langFromRequest || ($langFromRequest && ($langFromRequest !== 'en' && $langFromRequest !== 'ar'))) {
+      $langFromRequest = DEFAULT_LANG;
+    }
+    return $langFromRequest;
+  }
+
+  public function getTranslationFiles()
+  {
+    $fileEn = "./lang/en.php";
+    $fileAr = "./lang/ar.php";
+    $translations = array(
+      "en" => null,
+      "ar" => null
+    );
+    //  
+    if (file_exists($fileEn))
+      $translations['en'] = include $fileEn;
+    if (file_exists($fileAr))
+      $translations['ar'] = include $fileAr;
+    return $translations;
+  }
+
+  public function translate($str)
+  {
+    $lang = $this->getCurrentLang();
+
+    $translations = $this->getTranslationFiles();
+    return $translations[$lang][$str] ?? $str;
   }
 
   public function queryResponse($sql, $flag = 1)
@@ -155,7 +191,7 @@ class mainController extends main
 
   public function deleteMedia($file)
   {
-    $file = ".".$file;
+    $file = "." . $file;
     // Assuming $file is the path to the file on your server
     if (file_exists($file)) {
       if (unlink($file)) {

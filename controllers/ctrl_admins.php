@@ -6,7 +6,7 @@ class admins extends mainController
 	public function __construct()
 	{
 		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
-		// handle header params // token // language // and translate for api response message
+		// handle header params // token
 		$this->callMethod($this);
 	}
 
