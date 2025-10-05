@@ -153,6 +153,27 @@ class mainController extends main
     $this->getResponse(503);
   }
 
+  public function deleteMedia($file)
+  {
+    $file = ".".$file;
+    // Assuming $file is the path to the file on your server
+    if (file_exists($file)) {
+      if (unlink($file)) {
+        return true;
+        // // File deleted successfully
+        // $this->getResponse(200, "File deleted successfully.");
+      } else {
+        // Could not delete the file (permissions issue, etc.)
+        // $this->getResponse(500, "Failed to delete the file.");
+        return false;
+      }
+    } else {
+      // File does not exist
+      // $this->getResponse(404, "File not found.");
+      return true;
+    }
+  }
+
   public function uploadMedia($files)
   {
     $data = array();

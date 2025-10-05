@@ -5,9 +5,8 @@ class admins extends mainController
 	var $querySelector = array('id', 'username', 'isdeleted');
 	public function __construct()
 	{
+		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
 		// handle header params // token // language // and translate for api response message
-		// handle file upload - single and multiple
-		// in put i used x-www-form-urlencoded i guess we will change it, since it should be a multiform to accept files, we need to control this one.
 		$this->callMethod($this);
 	}
 
