@@ -64,6 +64,7 @@ if (
                 'admins',
                 'content',
                 'blogs',                
+                'blog_category',                                
             )
         ))
 ) {

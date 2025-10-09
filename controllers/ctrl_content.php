@@ -2,7 +2,7 @@
 class content extends mainController
 {
 	var $table = "content";
-	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date' . 'owner', 'isDeleted');
+	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date', 'owner', 'isDeleted');
 	public function __construct()
 	{
 		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		

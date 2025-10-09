@@ -245,10 +245,18 @@ class blogs extends mainController
 
 	public function modelContentData($temp, $fullPathImage = true)
 	{
+		$isDeleted = +$temp['isDeleted'] === 1;
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 
+		// also you should add arabic language..
+		// category should get the category details instead..
 		// $temp['tags'] = $temp['tags'];
-		if ($fullPathImage) {
+		if ($isDeleted) {
+			$temp['cover_desktop_img'] = null;
+			$temp['cover_mobile_img'] = null;
+			$temp['main_desktop_img'] = null;
+			$temp['main_mobile_img'] = null;
+		} else if ($fullPathImage) {
 			$temp['cover_desktop_img'] = IMG_BASE_URL . $temp['cover_desktop_img'];
 			$temp['cover_mobile_img'] = IMG_BASE_URL . $temp['cover_mobile_img'];
 			$temp['main_desktop_img'] = IMG_BASE_URL . $temp['main_desktop_img'];
@@ -257,7 +265,7 @@ class blogs extends mainController
 
 		$temp['contentType'] = 'blog';
 		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
-		$temp['isDeleted'] = +$temp['isDeleted'] === 1 ? true : false;
+		$temp['isDeleted'] = $isDeleted;
 
 		return $temp;
 	}
