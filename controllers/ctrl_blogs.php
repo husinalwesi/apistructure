@@ -65,14 +65,14 @@ class blogs extends mainController
 		return $data[0];
 	}
 
-	public function getItemByIDFn($id, $where = '')
+	public function getItemByIDFn($id, $where = '', $fullPathImage = true)
 	{
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$result = $this->queryResponse("select $querySelectorString from $this->table where id='$id' $where");
 		if (!$result || count($result) === 0)
 			return null;
 		$data = array();
-		$data = $this->modelAllData($result);
+		$data = $this->modelAllData($result, $fullPathImage);
 		if (!$data || count($data) === 0)
 			return null;
 		return $data[0];
@@ -109,6 +109,10 @@ class blogs extends mainController
 		$filesToBeUploaded['cover_mobile_img'] = $payload['files']['cover_mobile_img'];
 		$filesToBeUploaded['main_desktop_img'] = $payload['files']['main_desktop_img'];
 		$filesToBeUploaded['main_mobile_img'] = $payload['files']['main_mobile_img'];
+
+
+		// $this->dataArray = $filesToBeUploaded;		
+		// $this->getResponse(200);
 
 		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files
 
@@ -159,7 +163,17 @@ class blogs extends mainController
 		$short_desc = $payload['fields']['short_desc'];
 		$related_blog = $payload['fields']['related_blog'];
 
-		if (!$slug && !$title && !$body && !$tags && !$short_title && !$short_desc && !$related_blog)
+		$filesToBeUploaded = array();
+		if ($payload['files']['cover_desktop_img'])
+			$filesToBeUploaded['cover_desktop_img'] = $payload['files']['cover_desktop_img'];
+		if ($payload['files']['cover_mobile_img'])
+			$filesToBeUploaded['cover_mobile_img'] = $payload['files']['cover_mobile_img'];
+		if ($payload['files']['main_desktop_img'])
+			$filesToBeUploaded['main_desktop_img'] = $payload['files']['main_desktop_img'];
+		if ($payload['files']['main_mobile_img'])
+			$filesToBeUploaded['main_mobile_img'] = $payload['files']['main_mobile_img'];
+
+		if (!$slug && !$title && !$body && !$tags && !$short_title && !$short_desc && !$related_blog && !$filesToBeUploaded['cover_desktop_img'] && !$filesToBeUploaded['cover_mobile_img'] && !$filesToBeUploaded['main_desktop_img'] && !$filesToBeUploaded['main_mobile_img'])
 			$this->getResponse(501, 'there is nothing to be updated!');
 
 		$params = array();
@@ -174,14 +188,7 @@ class blogs extends mainController
 				$this->getResponse(501, 'the new slug already exist, use another one');
 		}
 		// 
-		$filesToBeUploaded = array();
-		$filesToBeUploaded['cover_desktop_img'] = $payload['files']['cover_desktop_img'];
-		$filesToBeUploaded['cover_mobile_img'] = $payload['files']['cover_mobile_img'];
-		$filesToBeUploaded['main_desktop_img'] = $payload['files']['main_desktop_img'];
-		$filesToBeUploaded['main_mobile_img'] = $payload['files']['main_mobile_img'];
-
-		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files
-
+		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files
 
 		if ($title)
 			$params['title'] = $payload['fields']['title'];
@@ -218,29 +225,35 @@ class blogs extends mainController
 	{
 		$this->checkAuth();
 
-		$data = $this->getItemByIDFn($slugID, " and isDeleted='0'");
+		$data = $this->getItemByIDFn($slugID, " and isDeleted='0'", false);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given ID.");
-
 
 		$params = array();
 		$params['isDeleted'] = 1;
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$slugID'"))
 			$this->getResponse(503, "An Error Occure.");
 
+
+		$this->deleteMedia($data['cover_desktop_img']);
+		$this->deleteMedia($data['cover_mobile_img']);
+		$this->deleteMedia($data['main_desktop_img']);
+		$this->deleteMedia($data['main_mobile_img']);
+
 		$this->getResponse(200, 'deleted successfully..');
 	}
 
-	public function modelContentData($temp)
+	public function modelContentData($temp, $fullPathImage = true)
 	{
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 
 		// $temp['tags'] = $temp['tags'];
-		$temp['cover_desktop_img'] = IMG_BASE_URL . $temp['cover_desktop_img'];
-		$temp['cover_mobile_img'] = IMG_BASE_URL . $temp['cover_mobile_img'];
-		$temp['main_desktop_img'] = IMG_BASE_URL . $temp['main_desktop_img'];
-		$temp['main_mobile_img'] = IMG_BASE_URL . $temp['main_mobile_img'];
-
+		if ($fullPathImage) {
+			$temp['cover_desktop_img'] = IMG_BASE_URL . $temp['cover_desktop_img'];
+			$temp['cover_mobile_img'] = IMG_BASE_URL . $temp['cover_mobile_img'];
+			$temp['main_desktop_img'] = IMG_BASE_URL . $temp['main_desktop_img'];
+			$temp['main_mobile_img'] = IMG_BASE_URL . $temp['main_mobile_img'];
+		}
 
 		$temp['contentType'] = 'blog';
 		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
@@ -249,11 +262,11 @@ class blogs extends mainController
 		return $temp;
 	}
 
-	function modelAllData($temp)
+	function modelAllData($temp, $fullPathImage = true)
 	{
 		$data = array();
 		foreach ($temp as $key => $value) {
-			$data[] = $this->modelContentData($temp[$key]);
+			$data[] = $this->modelContentData($temp[$key], $fullPathImage);
 		}
 		return $data;
 	}

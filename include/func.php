@@ -78,7 +78,6 @@ class main
   {
     $method = $_SERVER['REQUEST_METHOD'];
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-
     $result = [
       "fields" => [],
       "files" => []
@@ -219,7 +218,7 @@ class main
     // If there are missing fields, return a formatted response and stop execution
     if (!empty($missingFields)) {
       $missingList = '`' . implode('`, `', $missingFields) . '`';
-      $this->getResponse(501, "Missing required field(s): {$missingList}");
+      $this->getResponse(501, "Missing required file(s): {$missingList}");
     }
     return true;
   }  

@@ -210,6 +210,55 @@ class mainController extends main
     }
   }
 
+  public function uploadMediaPut($files)
+  {
+    $data = array();
+    foreach ($files as $key => $file) {
+      $fileName = $file['name'];
+      $fileName = str_replace(' ', '-', $file['name']);
+
+      $mg = uniqid() . "_" . $fileName;
+      $tData = strtotime("today");
+      $uploadDir = "./uploads/$tData/";
+      $originalImage = $uploadDir . $mg;
+
+      // Check if folder exists
+      if (!is_dir($uploadDir)) {
+        if (!mkdir($uploadDir, 0755, true)) {
+          $this->getResponse(500, "Cannot create folder $uploadDir");
+          return;
+        }
+      }
+
+      // Check if folder is writable
+      if (!is_writable($uploadDir)) {
+        $this->getResponse(500, "Folder $uploadDir is not writable");
+        return;
+      }
+
+
+
+      // 
+      // Instead of move_uploaded_file:
+      $originalImage = $uploadDir . basename($mg);
+      if (rename($file['tmp_name'], $originalImage)) {
+        // echo "File moved successfully.";
+        $data[$key] = '/uploads/' . $tData . '/' . $mg;
+      } else {
+        // echo "Failed to move file.";
+        $this->getResponse(500, "Failed to move uploaded file to $originalImage");
+      }
+      // Attempt to move uploaded file
+      // if (move_uploaded_file($file['tmp_name'], $originalImage)) {
+      //   $data[$key] = '/uploads/' . $tData . '/' . $mg;
+      // } else {
+      //   $this->getResponse(500, "Failed to move uploaded file to $originalImage");
+      // }
+    }
+
+    return $data;
+  }
+
   public function uploadMedia($files)
   {
     $data = array();
