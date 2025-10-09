@@ -62,6 +62,8 @@ if (
             $controller,
             array(
                 'admins',
+                'content',
+                'blogs',                
             )
         ))
 ) {

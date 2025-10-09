@@ -13,6 +13,28 @@ class main
    * the tags
    */
 
+  public function getAdminByIDFn($userID, $where = '')
+  {
+    $querySelector = array('id', 'username', 'password', 'createdDate', 'isDeleted');
+    $querySelectorString = $this->getQuerySelector($querySelector);
+    $result = $this->queryResponse("select $querySelectorString from admin where CAST(id AS CHAR)='$userID' $where");
+    if (!$result || count($result) === 0)
+      return null;
+    $data = array();
+    $data = $this->modelAdminData($result[0]);
+    if (!$data || count($data) === 0)
+      return null;
+    return $data;
+  }
+
+  public function modelAdminData($temp)
+  {
+    unset($temp['password']);
+    $temp['createdDate'] = $this->timeStampToDate($temp['createdDate']);
+    $temp['isDeleted'] = +$temp['isDeleted'] === 1 ? true : false;
+    return $temp;
+  }
+
   public function isHeaderParamExist($var)
   {
     $data = getallheaders();
@@ -162,6 +184,73 @@ class main
 
   }
 
+  public function checkRequiredFields(array $requiredFields)
+  {
+    $payload = $this->getRequestData();
+    $missingFields = [];
+
+    // Loop through required fields and check if any are missing or empty
+    foreach ($requiredFields as $field) {
+      if (empty($payload['fields'][$field] ?? null)) {
+        $missingFields[] = $field;
+      }
+    }
+
+    // If there are missing fields, return a formatted response and stop execution
+    if (!empty($missingFields)) {
+      $missingList = '`' . implode('`, `', $missingFields) . '`';
+      $this->getResponse(501, "Missing required field(s): {$missingList}");
+    }
+    return true;
+  }
+
+  public function checkRequiredFiles(array $requiredFields)
+  {
+    $payload = $this->getRequestData();
+    $missingFields = [];
+
+    // Loop through required fields and check if any are missing or empty
+    foreach ($requiredFields as $field) {
+      if (empty($payload['files'][$field] ?? null)) {
+        $missingFields[] = $field;
+      }
+    }
+
+    // If there are missing fields, return a formatted response and stop execution
+    if (!empty($missingFields)) {
+      $missingList = '`' . implode('`, `', $missingFields) . '`';
+      $this->getResponse(501, "Missing required field(s): {$missingList}");
+    }
+    return true;
+  }  
+
+
+  // public function checkRequiredFields()
+  // {
+  //   $payload = $this->getRequestData();
+
+  //   // Safely extract fields from payload
+  //   $username = $payload['fields']['username'] ?? null;
+  //   $password = $payload['fields']['password'] ?? null;
+
+  //   // Track missing fields
+  //   $missingFields = [];
+
+  //   if (empty($username)) {
+  //     $missingFields[] = 'username';
+  //   }
+
+  //   if (empty($password)) {
+  //     $missingFields[] = 'password';
+  //   }
+
+  //   // Respond with clear error message if any field is missing
+  //   if (!empty($missingFields)) {
+  //     $missingList = '`' . implode('`, `', $missingFields) . '`';
+  //     $this->getResponse(501, "Missing required field(s): {$missingList}");
+  //   }
+  // }
+
   public function getSecureData($var, $default = '')
   {
     return !empty($var) ? strip_tags($var) : $default;
@@ -275,7 +364,7 @@ class main
     return "limit $limit OFFSET $offset";
   }
 
-  public function timeStampToDate($val, $type)
+  public function timeStampToDate($val, $type = 'dateTime')
   {
     $result = "";
     if ($type == "dateTime") {

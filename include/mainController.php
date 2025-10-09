@@ -238,7 +238,7 @@ class mainController extends main
 
       // Attempt to move uploaded file
       if (move_uploaded_file($file['tmp_name'], $originalImage)) {
-        $data[] = '/uploads/' . $tData . '/' . $mg;
+        $data[$key] = '/uploads/' . $tData . '/' . $mg;
       } else {
         $this->getResponse(500, "Failed to move uploaded file to $originalImage");
       }
