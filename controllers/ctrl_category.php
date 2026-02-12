@@ -1,8 +1,8 @@
 <?php
-class blog_category extends mainController
+class category extends mainController
 {
-	var $table = "blog_category";
-	var $querySelector = array('id', 'title_en', 'title_ar', 'description_en', 'description_ar', 'desktop_img', 'mobile_img', 'owner', 'created_date', 'isDeleted');
+	var $table = "category";
+	var $querySelector = array('id', 'title', 'description', 'img', 'img_inner', 'owner', 'created_date', 'isDeleted', 'isActive');
 	public function __construct()
 	{
 		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
@@ -100,24 +100,22 @@ class blog_category extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['title_en', 'title_ar', 'description_en', 'description_ar']);
+		$this->checkRequiredFields(['title', 'description']);
 
-		$this->checkRequiredFiles(['desktop_img', 'mobile_img']);
+		$this->checkRequiredFiles(['img', 'img_inner']);
 
 		$filesToBeUploaded = array();
-		$filesToBeUploaded['desktop_img'] = $payload['files']['desktop_img'];
-		$filesToBeUploaded['mobile_img'] = $payload['files']['mobile_img'];
+		$filesToBeUploaded['img'] = $payload['files']['img'];
+		$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
 
 		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files
 
 		$params = array(
 			'id' => '',
-			'title_en' => $payload['fields']['title_en'],
-			'title_ar' => $payload['fields']['title_ar'],
-			'description_en' => $payload['fields']['description_en'],
-			'description_ar' => $payload['fields']['description_ar'],
-			'desktop_img' => $uploadedFilesPaths['desktop_img'],
-			'mobile_img' => $uploadedFilesPaths['mobile_img'],
+			'title' => $payload['fields']['title'],
+			'description' => $payload['fields']['description'],
+			'img' => $uploadedFilesPaths['img'],
+			'img_inner' => $uploadedFilesPaths['img_inner'],
 			'owner' => '11',//to get from token passed in header
 			'created_date' => time(),
 			'isDeleted' => '0'
@@ -143,38 +141,32 @@ class blog_category extends mainController
 			$this->getResponse(501, 'there is no category with this id');
 
 
-		$title_en = $payload['fields']['title_en'];
-		$title_ar = $payload['fields']['title_ar'];
-		$description_en = $payload['fields']['description_en'];
-		$description_ar = $payload['fields']['description_ar'];
+		$title = $payload['fields']['title_'];
+		$description = $payload['fields']['description'];
 
 		$filesToBeUploaded = array();
-		if ($payload['files']['desktop_img'])
-			$filesToBeUploaded['desktop_img'] = $payload['files']['desktop_img'];
-		if ($payload['files']['mobile_img'])
-			$filesToBeUploaded['mobile_img'] = $payload['files']['mobile_img'];
+		if ($payload['files']['img'])
+			$filesToBeUploaded['img'] = $payload['files']['img'];
+		if ($payload['files']['img_inner'])
+			$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
 
 
-		if (!$title_en && !$title_ar && !$description_en && !$description_ar && !$filesToBeUploaded['desktop_img'] && !$filesToBeUploaded['mobile_img'])
+		if (!$title && !$description && !$filesToBeUploaded['img'] && !$filesToBeUploaded['img_inner'])
 			$this->getResponse(501, 'there is nothing to be updated!');
 
 		$params = array();
 
 		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files		
 
-		if ($title_en)
-			$params['title_en'] = $payload['fields']['title_en'];
-		if ($title_ar)
-			$params['title_ar'] = $payload['fields']['title_ar'];
-		if ($description_en)
-			$params['description_en'] = $payload['fields']['description_en'];
-		if ($description_ar)
-			$params['description_ar'] = $payload['fields']['description_ar'];
+		if ($title)
+			$params['title'] = $payload['fields']['title'];
+		if ($description)
+			$params['description'] = $payload['fields']['description'];
 
-		if ($uploadedFilesPaths['desktop_img'])
-			$params['desktop_img'] = $uploadedFilesPaths['desktop_img'];
-		if ($uploadedFilesPaths['mobile_img'])
-			$params['mobile_img'] = $uploadedFilesPaths['mobile_img'];
+		if ($uploadedFilesPaths['img'])
+			$params['img'] = $uploadedFilesPaths['img'];
+		if ($uploadedFilesPaths['img_inner'])
+			$params['img_inner'] = $uploadedFilesPaths['img_inner'];
 
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
@@ -198,51 +190,56 @@ class blog_category extends mainController
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
 
-		$this->deleteMedia($data['image']['desktop']);
-		$this->deleteMedia($data['image']['mobile']);
+		$this->deleteMedia($data['image']['img']);
+		$this->deleteMedia($data['image']['img_inner']);
 
 		$this->getResponse(200, 'deleted successfully..');
 	}
 
-	public function modelBlogCategoryData($temp, $fullPathImage = true)
+	public function modelCategoryData($temp, $fullPathImage = true)
 	{
 		$isDeleted = +$temp['isDeleted'] === 1;
-		$temp['title'] = array(
-			'en' => $temp['title_en'],
-			'ar' => $temp['title_ar'],
-		);
+		$isActive = +$temp['isActive'] === 1;		
+		
+		// $temp['title'] = array(
+		// 	'en' => $temp['title_en'],
+		// 	'ar' => $temp['title_ar'],
+		// );
 
-		$temp['description'] = array(
-			'en' => $temp['description_en'],
-			'ar' => $temp['description_ar'],
-		);
+		// $temp['description'] = array(
+		// 	'en' => $temp['description_en'],
+		// 	'ar' => $temp['description_ar'],
+		// );
 
 		if ($isDeleted) {
-			$temp['image'] = array(
-				'desktop' => null,
-				'mobile' => null,
-			);
+			// $temp['image'] = array(
+			// 	'desktop' => null,
+			// 	'mobile' => null,
+			// );
 		} else if ($fullPathImage) {
-			$temp['image'] = array(
-				'desktop' => IMG_BASE_URL . $temp['desktop_img'],
-				'mobile' => IMG_BASE_URL . $temp['mobile_img'],
-			);
+			$temp['img'] = IMG_BASE_URL . $temp['img'];
+			$temp['img_inner'] = IMG_BASE_URL . $temp['img_inner'];			
+			// $temp['image'] = array(
+			// 	'desktop' => IMG_BASE_URL . $temp['desktop_img'],
+			// 	'mobile' => IMG_BASE_URL . $temp['mobile_img'],
+			// );
 		} else {
-			$temp['image'] = array(
-				'desktop' => $temp['desktop_img'],
-				'mobile' => $temp['mobile_img'],
-			);
+			// $temp['image'] = array(
+			// 	'desktop' => $temp['desktop_img'],
+			// 	'mobile' => $temp['mobile_img'],
+			// );
 		}
 
-		unset($temp['title_en']);
-		unset($temp['title_ar']);
-		unset($temp['description_en']);
-		unset($temp['description_ar']);
-		unset($temp['desktop_img']);
-		unset($temp['mobile_img']);
+		// unset($temp['title_en']);
+		// unset($temp['title_ar']);
+		// unset($temp['description_en']);
+		// unset($temp['description_ar']);
+		// unset($temp['desktop_img']);
+		// unset($temp['mobile_img']);
 
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 		$temp['isDeleted'] = $isDeleted;
+		$temp['isActive'] = $isActive;
 		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
 		return $temp;
 	}
@@ -251,7 +248,7 @@ class blog_category extends mainController
 	{
 		$data = array();
 		foreach ($temp as $key => $value) {
-			$data[] = $this->modelBlogCategoryData($temp[$key], $fullPathImage);
+			$data[] = $this->modelCategoryData($temp[$key], $fullPathImage);
 		}
 		return $data;
 	}

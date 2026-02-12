@@ -63,8 +63,8 @@ if (
             array(
                 'admins',
                 'content',
-                'blogs',                
-                'blog_category',                                
+                'questions',                
+                'category',                                
             )
         ))
 ) {
