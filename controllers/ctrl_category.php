@@ -100,7 +100,7 @@ class category extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['title', 'description']);
+		$this->checkRequiredFields(['title', 'description', 'owner']);
 
 		$this->checkRequiredFiles(['img', 'img_inner']);
 
@@ -116,7 +116,7 @@ class category extends mainController
 			'description' => $payload['fields']['description'],
 			'img' => $uploadedFilesPaths['img'],
 			'img_inner' => $uploadedFilesPaths['img_inner'],
-			'owner' => '11',//to get from token passed in header
+			'owner' => $payload['fields']['owner'],//to get from token passed in header
 			'created_date' => time(),
 			'isDeleted' => '0'
 		);
