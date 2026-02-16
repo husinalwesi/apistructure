@@ -62,6 +62,7 @@ if (
             $controller,
             array(
                 'admins',
+                'analytics',
                 'content',
                 'questions',                
                 'category',                                

@@ -48,7 +48,7 @@ class questions extends mainController
 			$where = "where isDeleted='0'";
 
 		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
-		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where $handlePagination"));
+		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where order by created_date desc $handlePagination"));
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -238,11 +238,64 @@ class questions extends mainController
 		$this->getResponse(200, 'deleted successfully..');
 	}
 
-	public function modelContentData($temp, $fullPathImage = true)
+	public function modelCategoryData($temp, $fullPathImage = true)
 	{
 		$isDeleted = +$temp['isDeleted'] === 1;
-		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$isActive = +$temp['isActive'] === 1;		
+		
+		// $temp['title'] = array(
+		// 	'en' => $temp['title_en'],
+		// 	'ar' => $temp['title_ar'],
+		// );
 
+		// $temp['description'] = array(
+		// 	'en' => $temp['description_en'],
+		// 	'ar' => $temp['description_ar'],
+		// );
+
+		if ($isDeleted) {
+			// $temp['image'] = array(
+			// 	'desktop' => null,
+			// 	'mobile' => null,
+			// );
+		} else if ($fullPathImage) {
+			$temp['img'] = IMG_BASE_URL . $temp['img'];
+			// $temp['img_inner'] = IMG_BASE_URL . $temp['img_inner'];			
+			// $temp['image'] = array(
+			// 	'desktop' => IMG_BASE_URL . $temp['desktop_img'],
+			// 	'mobile' => IMG_BASE_URL . $temp['mobile_img'],
+			// );
+		} else {
+			// $temp['image'] = array(
+			// 	'desktop' => $temp['desktop_img'],
+			// 	'mobile' => $temp['mobile_img'],
+			// );
+		}
+
+		// unset($temp['title_en']);
+		// unset($temp['title_ar']);
+		// unset($temp['description_en']);
+		// unset($temp['description_ar']);
+		// unset($temp['desktop_img']);
+		// unset($temp['mobile_img']);
+
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['isDeleted'] = $isDeleted;
+		$temp['isActive'] = $isActive;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
+		return $temp;
+	}
+
+	public function modelContentData($temp, $fullPathImage = true)
+	{
+		
+
+		$categoryDetails = $this->queryResponse("select * from category where id='".$temp['category']."'");		
+
+
+		$isDeleted = +$temp['isDeleted'] === 1;
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['categoryDetails'] = $this->modelCategoryData($categoryDetails[0]);
 // var $querySelector = array('id', 'title', 'description', 'category', 'score', 'q_file', 'a_title', 'a_description', 'a_file', '', '', '');
 
 		// $tags = $temp['tags'];

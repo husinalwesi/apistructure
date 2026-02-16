@@ -326,7 +326,7 @@ class main
   {
     $total = "0";
     // $this->getResponse(200,"select count($param) as '$param' from $table_name $where");
-    $total_obj = $this->queryResponse("select count($param) as '$param' from $table_name $where");
+    $total_obj = $this->queryResponse("select count($param) as '$param' from $table_name $where order by created_date desc");
     if ($total_obj)
       $total = $total_obj[0][$param];
     // 
