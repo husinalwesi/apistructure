@@ -25,11 +25,11 @@ class analytics extends mainController
 	public function getItems()
 	{
 		$this->checkAuth();
-		$totalCategories = $this->queryResponse("select count(id) as 'totalCategories' from category");
+		$totalCategories = $this->queryResponse("select count(id) as 'totalCategories' from category where isDeleted='0'");
 
-		$totalMainCategories = $this->queryResponse("select count(distinct groupCategory) as 'totalMainCategories' from category");		
+		$totalMainCategories = $this->queryResponse("select count(distinct groupCategory) as 'totalMainCategories' from category where isDeleted='0'");		
 
-		$totalQuestions = $this->queryResponse("select count(id) as 'totalQuestions' from questions");		
+		$totalQuestions = $this->queryResponse("select count(id) as 'totalQuestions' from questions where isDeleted='0'");		
 
 		$data = array();
 		$data["totalCategories"] = $totalCategories[0]['totalCategories'];		
