@@ -2,7 +2,7 @@
 class admins extends mainController
 {
 	var $table = "admin";
-	var $querySelector = array('id', 'username', 'password', 'createdDate', 'isDeleted');
+	var $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name');
 	public function __construct()
 	{
 		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
@@ -110,9 +110,10 @@ class admins extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['username', 'password']);
+		$this->checkRequiredFields(['username', 'password', 'name']);
 
 		$username = $payload['fields']['username'];
+		$name = $payload['fields']['name'];		
 
 
 		$ifUsernameAlreadyExist = $this->queryResponse("select * from $this->table where username='$username'");
@@ -123,7 +124,8 @@ class admins extends mainController
 			'id' => '',
 			'username' => $username,
 			'password' => md5($payload['fields']['password']),
-			'createdDate' => time(),
+			'name' => $name,			
+			'created_date' => time(),
 			'isDeleted' => '0'
 		);
 
@@ -143,6 +145,7 @@ class admins extends mainController
 		$payload = $this->getRequestData();
 
 		$username = $payload['fields']['username'];
+		$name = $payload['fields']['name'];		
 		$password = $payload['fields']['password'];
 		if (!$username && !$password)
 			$this->getResponse(501, 'there is nothing to be updated!');
@@ -153,6 +156,9 @@ class admins extends mainController
 			$params['username'] = $payload['fields']['username'];
 		if ($password)
 			$params['password'] = md5($payload['fields']['password']);
+		if ($name)
+			$params['name'] = $payload['fields']['name'];
+
 
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'"))
 			$this->getResponse(503, "An Error Occure.");
@@ -183,7 +189,7 @@ class admins extends mainController
 	// public function modelAdminData($temp)
 	// {
 	// 	unset($temp['password']);
-	// 	$temp['createdDate'] = $this->timeStampToDate($temp['createdDate']);
+	// 	$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 	// 	$temp['isDeleted'] = +$temp['isDeleted'] === 1 ? true : false;
 	// 	return $temp;
 	// }

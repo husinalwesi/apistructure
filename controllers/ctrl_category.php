@@ -37,7 +37,7 @@ class category extends mainController
 	public function getItemsWithOutPagination()
 	{
 		$this->checkAuth();
-		$querySelectorString = $this->getQuerySelector($this->querySelector);
+		// $querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
 		// 
 		$where = "";
@@ -48,6 +48,9 @@ class category extends mainController
 			$where = "where isDeleted='0'";
 
 		$data = $this->queryResponse("select id, title from $this->table $where");
+		foreach ($data as $key => $value) {
+			$data[$key]['count'] = 3;
+		}
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -68,6 +71,9 @@ class category extends mainController
 
 		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
 		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where order by created_date desc $handlePagination"));
+		foreach ($data["data"] as $key => $value) {
+			$data["data"][$key]['count'] = 3;
+		}		
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -91,6 +97,7 @@ class category extends mainController
 		$data = $this->getItemByIDFn($slug);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given ID.");
+		$data['count'] = 3;
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -107,7 +114,7 @@ class category extends mainController
 
 		$filesToBeUploaded = array();
 		$filesToBeUploaded['img'] = $payload['files']['img'];
-		// $filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
+		$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
 
 		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files
 
@@ -116,7 +123,7 @@ class category extends mainController
 			'title' => $payload['fields']['title'],
 			'description' => $payload['fields']['description'],
 			'img' => $uploadedFilesPaths['img'],
-			'img_inner' => '',
+			'img_inner' => $uploadedFilesPaths['img_inner'],
 			'owner' => $payload['fields']['owner'],//to get from token passed in header
 			'created_date' => time(),
 			'isDeleted' => '0'
@@ -142,14 +149,14 @@ class category extends mainController
 			$this->getResponse(501, 'there is no category with this id');
 
 
-		$title = $payload['fields']['title_'];
+		$title = $payload['fields']['title'];
 		$description = $payload['fields']['description'];
 
 		$filesToBeUploaded = array();
 		if ($payload['files']['img'])
 			$filesToBeUploaded['img'] = $payload['files']['img'];
-		// if ($payload['files']['img_inner'])
-		// 	$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
+		if ($payload['files']['img_inner'])
+			$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
 
 
 		// if (!$title && !$description && !$filesToBeUploaded['img'] && !$filesToBeUploaded['img_inner'])		
@@ -167,8 +174,8 @@ class category extends mainController
 
 		if ($uploadedFilesPaths['img'])
 			$params['img'] = $uploadedFilesPaths['img'];
-		// if ($uploadedFilesPaths['img_inner'])
-		// 	$params['img_inner'] = $uploadedFilesPaths['img_inner'];
+		if ($uploadedFilesPaths['img_inner'])
+			$params['img_inner'] = $uploadedFilesPaths['img_inner'];
 
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
@@ -200,10 +207,10 @@ class category extends mainController
 
 	public function modelCategoryData($temp, $fullPathImage = true)
 	{
-	$questionsCount = $this->queryResponse("select count(id) as 'questionsCount' from questions where category='".$temp['id']."'");
+	// $questionsCount = $this->queryResponse("select count(id) as 'questionsCount' from questions where category='".$temp['id']."'");
 
 	
-	$temp['questionsCount'] = $questionsCount[0]['questionsCount'];
+	// $temp['questionsCount'] = $questionsCount[0]['questionsCount'];
 
 
 		$isDeleted = +$temp['isDeleted'] === 1;
@@ -226,7 +233,7 @@ class category extends mainController
 			// );
 		} else if ($fullPathImage) {
 			$temp['img'] = IMG_BASE_URL . $temp['img'];
-			// $temp['img_inner'] = IMG_BASE_URL . $temp['img_inner'];			
+			$temp['img_inner'] = IMG_BASE_URL . $temp['img_inner'];			
 			// $temp['image'] = array(
 			// 	'desktop' => IMG_BASE_URL . $temp['desktop_img'],
 			// 	'mobile' => IMG_BASE_URL . $temp['mobile_img'],
