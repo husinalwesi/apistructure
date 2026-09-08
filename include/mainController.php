@@ -49,6 +49,9 @@ class mainController extends main
   public function extractUrlParams()
   {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $uri = urldecode($uri);
+    // here the change..
+
     $uri = explode('/', trim($uri, '/')); // remove leading/trailing slashes and split
 
     // find position of "api"

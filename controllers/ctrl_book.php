@@ -4,6 +4,7 @@ class book extends mainController
 	var $table = "book";
 	var $querySelector = array(
 		'id',
+		'slug',
 		'title',
 		'short_desc',
 		'long_desc',
@@ -38,7 +39,8 @@ class book extends mainController
 		if (count($params) === 0 && $this->isAllowedMethod('GET')) {
 			$this->getItems();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('GET')) {
-			$this->getItemByID($params[0]);
+			$this->getItemBySlug($params[0]);
+			// $this->getItemByID($params[0]);			
 		} elseif (count($params) === 0 && $this->isAllowedMethod('POST')) {
 			$this->createItem();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('PUT')) {
@@ -59,10 +61,13 @@ class book extends mainController
 		// 
 		$where = "";
 		$show_deleted = $this->getSecureParams("show_deleted");
-		if ($show_deleted === 'true')
-			$where = "where is_deleted='1'";
-		else if ($show_deleted === 'false')
-			$where = "where is_deleted='0'";
+		if ($show_deleted === 'true') $where = "where is_deleted='1'";
+		else if ($show_deleted === 'false') $where = "where is_deleted='0'";
+
+		$category = $this->getSecureParams("category");
+		if($category) $where.=" and category = '$category'";
+		// category
+
 
 		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
 		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where $handlePagination"));
@@ -84,6 +89,20 @@ class book extends mainController
 		return $data[0];
 	}
 
+	public function getItemBySlugFn($slug, $where = '')
+	{
+		$querySelectorString = $this->getQuerySelector($this->querySelector);
+		$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
+
+		if (!$result || count($result) === 0)
+			return null;
+		$data = array();
+		$data = $this->modelAllData($result);
+		if (!$data || count($data) === 0)
+			return null;
+		return $data[0];
+	}	
+
 	public function modelBlogsData($temp)
 	{
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
@@ -102,6 +121,15 @@ class book extends mainController
 		return $temp;
 	}
 
+	public function getItemBySlug($slug)
+	{
+		$this->checkAuth();
+		$data = $this->getItemBySlugFn($slug);
+		if (!$data) $this->getResponse(404, "No data found for the given Slug.");
+		$this->dataArray = $data;
+		$this->getResponse(200);
+	}	
+
 	public function getItemByID($id)
 	{
 		$this->checkAuth();
@@ -118,6 +146,7 @@ class book extends mainController
 		$payload = $this->getRequestData();
 
 		$this->checkRequiredFields([
+			'slug',
 			'title',
 			'short_desc',
 			'long_desc',
@@ -131,6 +160,9 @@ class book extends mainController
 			'category'
 		]);
 
+		$slug = $payload['fields']['slug'];
+		$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where slug='$slug'");
+		if ($ifSlugAlreadyExist) $this->getResponse(501, 'slug already exist, use another one');		
 
 		// $this->checkRequiredFiles(['img', 'inner_img']);				
 		$this->checkRequiredFiles(['img']);
@@ -144,6 +176,7 @@ class book extends mainController
 		$params = array(
 			'id' => '',
 
+			'slug' => $payload['fields']['slug'],			
 			'title' => $payload['fields']['title'],
 			'short_desc' => $payload['fields']['short_desc'],
 			'long_desc' => $payload['fields']['long_desc'],
@@ -184,6 +217,7 @@ class book extends mainController
 			$this->getResponse(501, 'there is no content with this ID');
 
 
+		$slug = $payload['fields']['slug'];		
 		$title = $payload['fields']['title'];
 		$short_desc = $payload['fields']['short_desc'];
 		$long_desc = $payload['fields']['long_desc'];
@@ -207,6 +241,7 @@ class book extends mainController
 		if (
 			!$filesToBeUploaded['img'] &&
 			!$filesToBeUploaded['inner_img'] &&
+			!$slug &&
 			!$title &&
 			!$short_desc &&
 			!$long_desc &&
@@ -221,6 +256,15 @@ class book extends mainController
 		)
 			$this->getResponse(501, 'there is nothing to be updated!');
 
+		// check if new slug is already used or not
+		$newSlug = $payload['fields']['slug'];
+		if($newSlug){
+			$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where slug='$newSlug' and id != '$id'");
+			if ($ifSlugAlreadyExist) $this->getResponse(501, 'the new slug already exist, use another one');
+		}
+		// 
+
+
 		$params = array();
 
 		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files		
@@ -230,6 +274,8 @@ class book extends mainController
 		if ($uploadedFilesPaths['inner_img'])
 			$params['inner_img'] = $uploadedFilesPaths['inner_img'];		
 
+		if ($slug)
+			$params['slug'] = $payload['fields']['slug'];		
 		if ($title)
 			$params['title'] = $payload['fields']['title'];
 		if ($short_desc)

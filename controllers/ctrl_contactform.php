@@ -1,8 +1,8 @@
 <?php
-class category extends mainController
+class contactform extends mainController
 {
-	var $table = "category";
-	var $querySelector = array('id', 'slug', 'title', 'description', 'img', 'img_inner', 'owner', 'created_date', 'isDeleted', 'isActive');
+	var $table = "contactform";
+	var $querySelector = array('id', 'name', 'phone', 'email', 'message', 'created_date', 'status');
 	public function __construct()
 	{
 		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
@@ -17,20 +17,18 @@ class category extends mainController
 	public function mainAPI()
 	{
 		$params = $this->extractUrlParams();
-		if ($params[0] === 'full' && $this->isAllowedMethod('GET')) {
-			$this->getItemsWithOutPagination();
-		} else if (count($params) === 0 && $this->isAllowedMethod('GET')) {
+		if (count($params) === 0 && $this->isAllowedMethod('GET')) {
 			$this->getItems();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('GET')) {
-			$this->getItemBySlug($params[0]);			
-			// $this->getItemByID($params[0]);
+			$this->getItemByID($params[0]);
 		} elseif (count($params) === 0 && $this->isAllowedMethod('POST')) {
 			$this->createItem();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('PUT')) {
 			$this->updateItem($params[0]);
-		} elseif (count($params) === 1 && $this->isAllowedMethod('DELETE')) {
-			$this->deleteItem($params[0]);
 		}
+		//  elseif (count($params) === 1 && $this->isAllowedMethod('DELETE')) {
+		// 	$this->deleteItem($params[0]);
+		// }
 
 		$this->getResponse(422, "Method not supported");
 	}
@@ -65,17 +63,11 @@ class category extends mainController
 		$data = array();
 		// 
 		$where = "";
-		$show_deleted = $this->getSecureParams("show_deleted");
-		if ($show_deleted === 'true')
-			$where = "where isDeleted='1'";
-		else if ($show_deleted === 'false')
-			$where = "where isDeleted='0'";
+		$status = $this->getSecureParams("status");
+		if ($status) $where = "where status='$status'";
 
 		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
 		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where order by created_date desc $handlePagination"));
-		// foreach ($data["data"] as $key => $value) {
-		// 	$data["data"][$key]['count'] = 3;
-		// }		
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -123,7 +115,6 @@ class category extends mainController
 		$data = $this->getItemByIDFn($slug);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given ID.");
-		// $data['count'] = 3;
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -133,32 +124,16 @@ class category extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['title', 'slug', 'description', 'owner']);
-
-		$this->checkRequiredFiles(['img']);
-		// $this->checkRequiredFiles(['img', 'img_inner']);		
-
-		$filesToBeUploaded = array();
-		$filesToBeUploaded['img'] = $payload['files']['img'];
-		$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
-
-		$slug = $payload['fields']['slug'];
-		$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where slug='$slug'");
-		if ($ifSlugAlreadyExist) $this->getResponse(501, 'slug already exist, use another one');
-
-		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files
-
+		$this->checkRequiredFields(['name', 'phone', 'email', 'message']);
 		
 		$params = array(
 			'id' => '',
-			'slug' => $payload['fields']['slug'],			
-			'title' => $payload['fields']['title'],
-			'description' => $payload['fields']['description'],
-			'img' => $uploadedFilesPaths['img'],
-			'img_inner' => $uploadedFilesPaths['img_inner'],
-			'owner' => $payload['fields']['owner'],//to get from token passed in header
+			'name' => $payload['fields']['name'],			
+			'phone' => $payload['fields']['phone'],
+			'email' => $payload['fields']['email'],
+			'message' => $payload['fields']['message'],
 			'created_date' => time(),
-			'isDeleted' => '0'
+			'status' => '0'
 		);
 
 		if (!$newID = $this->queryInsert($this->table, $params))
@@ -230,85 +205,33 @@ class category extends mainController
 		$this->getResponse(200, 'updated successfully..');
 	}
 
-	public function deleteItem($id)
+	// public function deleteItem($id)
+	// {
+	// 	$this->checkAuth();
+
+	// 	$data = $this->getItemByIDFn($id, " and isDeleted='0'", false);
+	// 	if (!$data) $this->getResponse(404, "No data found for the given ID.");
+
+
+
+	// 	$checkIfThereABooksInTheCategory = $this->queryResponse("select count(id) as 'count' from book where category = '$id' ");
+	// 	$count = $checkIfThereABooksInTheCategory[0]['count'];
+	// 	if($count > 0) $this->getResponse(301, "Cannot delete this category because it contains books.");	
+
+	// 	$params = array();
+	// 	$params['isDeleted'] = 1;
+	// 	if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
+	// 		$this->getResponse(503, "An Error Occure.");
+
+	// 	$this->deleteMedia($data['image']['img']);
+	// 	// $this->deleteMedia($data['image']['img_inner']);
+
+	// 	$this->getResponse(200, 'deleted successfully..');
+	// }
+
+	public function modelContactFormData($temp, $fullPathImage = true)
 	{
-		$this->checkAuth();
-
-		$data = $this->getItemByIDFn($id, " and isDeleted='0'", false);
-		if (!$data) $this->getResponse(404, "No data found for the given ID.");
-
-
-
-		$checkIfThereABooksInTheCategory = $this->queryResponse("select count(id) as 'count' from book where category = '$id' ");
-		$count = $checkIfThereABooksInTheCategory[0]['count'];
-		if($count > 0) $this->getResponse(301, "Cannot delete this category because it contains books.");	
-
-		$params = array();
-		$params['isDeleted'] = 1;
-		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
-			$this->getResponse(503, "An Error Occure.");
-
-		$this->deleteMedia($data['image']['img']);
-		// $this->deleteMedia($data['image']['img_inner']);
-
-		$this->getResponse(200, 'deleted successfully..');
-	}
-
-	public function modelCategoryData($temp, $fullPathImage = true)
-	{
-	// $questionsCount = $this->queryResponse("select count(id) as 'questionsCount' from questions where category='".$temp['id']."'");
-
-	
-	// $temp['questionsCount'] = $questionsCount[0]['questionsCount'];
-
-
-		$isDeleted = +$temp['isDeleted'] === 1;
-		$isActive = +$temp['isActive'] === 1;		
-		
-		// $temp['title'] = array(
-		// 	'en' => $temp['title_en'],
-		// 	'ar' => $temp['title_ar'],
-		// );
-
-		// $temp['description'] = array(
-		// 	'en' => $temp['description_en'],
-		// 	'ar' => $temp['description_ar'],
-		// );
-
-		if ($isDeleted) {
-			// $temp['image'] = array(
-			// 	'desktop' => null,
-			// 	'mobile' => null,
-			// );
-		} else if ($fullPathImage) {
-			$temp['img'] = IMG_BASE_URL . $temp['img'];
-			$temp['img_inner'] = IMG_BASE_URL . $temp['img_inner'];			
-			// $temp['image'] = array(
-			// 	'desktop' => IMG_BASE_URL . $temp['desktop_img'],
-			// 	'mobile' => IMG_BASE_URL . $temp['mobile_img'],
-			// );
-		} else {
-			// $temp['image'] = array(
-			// 	'desktop' => $temp['desktop_img'],
-			// 	'mobile' => $temp['mobile_img'],
-			// );
-		}
-
-		// unset($temp['title_en']);
-		// unset($temp['title_ar']);
-		// unset($temp['description_en']);
-		// unset($temp['description_ar']);
-		// unset($temp['desktop_img']);
-		// unset($temp['mobile_img']);
-
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
-		$temp['isDeleted'] = $isDeleted;
-		$temp['isActive'] = $isActive;
-		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
-
-
-		$result = $this->queryResponse("select count(id) as 'count' from book where category='" . $temp['id'] . "'");
-		$temp['book_in_category'] = $result[0]['count'];		
 		return $temp;
 	}
 
@@ -316,7 +239,7 @@ class category extends mainController
 	{
 		$data = array();
 		foreach ($temp as $key => $value) {
-			$data[] = $this->modelCategoryData($temp[$key], $fullPathImage);
+			$data[] = $this->modelContactFormData($temp[$key], $fullPathImage);
 		}
 		return $data;
 	}

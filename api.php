@@ -64,7 +64,8 @@ if (
                 'admins',
                 'content',
                 'category',
-                'book'
+                'book',
+                'contactform'
             )
         ))
 ) {

@@ -129,15 +129,20 @@ class content extends mainController
 			$data2[$temp[$key]] = $data2[$temp[$key]]['title'];			
 		}
 
-		// $this->dataArray = $data2;
-		// $this->getResponse(200);			
+		// 
+		$temp2 = array('company_profile','book-list-download','book-list-view');
+		$data4 = array();
 
-		// $this->dataArray = $data;
-		// $this->getResponse(200);			
+		foreach ($temp2 as $key => $value) {
+			$data4[$temp2[$key]] = $this->getItemBySlugFn($temp2[$key], " and isDeleted='0'");
+			$data4[$temp2[$key]] = $data4[$temp2[$key]]['title'] ? IMG_BASE_URL . $data4[$temp2[$key]]['title'] : '';
+		}
 
 		$result = array();
 		$result['contact'] = $data;
 		$result['social'] = $data2;	
+
+		$result['info'] = $data4;			
 
 		$result['general'] = array();
 		$result['general']['short_info'] = array();
@@ -320,6 +325,12 @@ class content extends mainController
 		$refund_title = $payload['fields']['refund_title'];
 		$refund_desc = $payload['fields']['refund_desc'];
 
+
+		$filesToBeUploaded = array();
+		if ($payload['files']['company_profile']) $filesToBeUploaded['company_profile'] = $payload['files']['company_profile'];
+		if ($payload['files']['book_list_download']) $filesToBeUploaded['book_list_download'] = $payload['files']['book_list_download'];
+		if ($payload['files']['book_list_view']) $filesToBeUploaded['book_list_view'] = $payload['files']['book_list_view'];		
+
 		if (
 			!$phone &&
 			!$mobile &&
@@ -341,10 +352,34 @@ class content extends mainController
 			!$order_payment_title &&
 			!$order_payment_desc &&
 			!$refund_title &&
-			!$refund_desc
+			!$refund_desc &&
+			!$filesToBeUploaded['company_profile'] &&
+			!$filesToBeUploaded['book_list_download'] &&
+			!$filesToBeUploaded['book_list_view']
 		) {
 			$this->getResponse(203, "No data provided.");
 		}
+
+		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files				
+
+		if($uploadedFilesPaths['company_profile']){
+			$params = array();		
+			$params['title'] = $uploadedFilesPaths['company_profile'];
+			if (!$this->queryUpdate($this->table, $params, "where slug='company_profile'")) $this->getResponse(503, "An Error Occure.");			
+		}
+
+		if($uploadedFilesPaths['book_list_download']){
+			$params = array();		
+			$params['title'] = $uploadedFilesPaths['book_list_download'];
+			if (!$this->queryUpdate($this->table, $params, "where slug='book-list-download'")) $this->getResponse(503, "An Error Occure.");			
+		}
+		
+		if($uploadedFilesPaths['book_list_view']){
+			$params = array();		
+			$params['title'] = $uploadedFilesPaths['book_list_view'];
+			if (!$this->queryUpdate($this->table, $params, "where slug='book-list-view'")) $this->getResponse(503, "An Error Occure.");			
+		}
+
 
 		if($phone){
 			$params = array();		
@@ -473,10 +508,7 @@ class content extends mainController
 		if ($slug) {
 			$newSlug = $payload['fields']['slug'];
 			$params['slug'] = $newSlug;
-
-			// $ifSlugAlreadyExistBlogs = $this->queryResponse("select * from blogs where slug='$newSlug' and id != '$slugID'");
 			$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where slug='$newSlug' and id != '$slugID'");
-			// if ($ifSlugAlreadyExist || $ifSlugAlreadyExistBlogs)			
 			if ($ifSlugAlreadyExist)
 				$this->getResponse(501, 'the new slug already exist, use another one');
 		}
