@@ -62,10 +62,9 @@ if (
             $controller,
             array(
                 'admins',
-                'analytics',
                 'content',
-                'questions',                
-                'category',                                
+                'category',
+                'book'
             )
         ))
 ) {

@@ -27,10 +27,40 @@ class main
     return $data;
   }
 
+public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
+	{
+		$querySelectorString = $this->getQuerySelector('id', 'title', 'description', 'img', 'img_inner', 'owner', 'created_date', 'isDeleted', 'isActive');
+		$result = $this->queryResponse("select $querySelectorString from category where id='$id' $where");
+		if (!$result || count($result) === 0)
+			return null;
+		$data = array();
+		$data = $this->modelCategoryData($result[0], $fullPathImage);
+
+		if (!$data) return null;
+		return $data;
+	}  
+
+	public function modelCategoryData($temp, $fullPathImage = true)
+	{
+		// $this->dataArray = $temp[0];  
+		// $this->getResponse(200);
+		$isDeleted = +$temp['isDeleted'] === 1;
+		$isActive = +$temp['isActive'] === 1;		
+    if ($fullPathImage) {
+			$temp['img'] = IMG_BASE_URL . $temp['img'];
+			$temp['img_inner'] = IMG_BASE_URL . $temp['img_inner'];			
+		}
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['isDeleted'] = $isDeleted;
+		$temp['isActive'] = $isActive;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
+		return $temp;
+	}  
+
   public function modelAdminData($temp)
   {
     unset($temp['password']);
-    $temp['createdDate'] = $this->timeStampToDate($temp['createdDate']);
+    $temp['created_date'] = $this->timeStampToDate($temp['created_date']);
     $temp['isDeleted'] = +$temp['isDeleted'] === 1 ? true : false;
     return $temp;
   }
