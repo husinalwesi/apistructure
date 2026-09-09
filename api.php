@@ -65,7 +65,9 @@ if (
                 'content',
                 'category',
                 'book',
-                'contactform'
+                'contactform',
+                'rates',
+                'events'
             )
         ))
 ) {
