@@ -181,6 +181,12 @@ class events extends mainController
 
 		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files		
 
+		if($uploadedFilesPaths['img'] && $ifIDAlreadyExist[0]['img']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifIDAlreadyExist[0]['img']);
+		}
+
+
 		if ($userid)
 			$params['userid'] = $payload['fields']['userid'];		
 		if ($description)
@@ -210,7 +216,7 @@ class events extends mainController
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
 
-		$this->deleteMedia($data['image']['img']);
+		// $this->deleteMedia($data['image']['img']);
 
 		$this->getResponse(200, 'deleted successfully..');
 	}

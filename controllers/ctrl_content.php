@@ -363,18 +363,33 @@ class content extends mainController
 		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files				
 
 		if($uploadedFilesPaths['company_profile']){
+			// 
+			$savedData = $this->queryResponse("select title from $this->table where slug='company_profile'");
+			$previousFilePath = $savedData[0]['title'];
+			$this->deleteMedia($previousFilePath);
+			// 
 			$params = array();		
 			$params['title'] = $uploadedFilesPaths['company_profile'];
 			if (!$this->queryUpdate($this->table, $params, "where slug='company_profile'")) $this->getResponse(503, "An Error Occure.");			
 		}
 
 		if($uploadedFilesPaths['book_list_download']){
+			// 
+			$savedData = $this->queryResponse("select title from $this->table where slug='book-list-download'");
+			$previousFilePath = $savedData[0]['title'];
+			$this->deleteMedia($previousFilePath);
+			// 
 			$params = array();		
 			$params['title'] = $uploadedFilesPaths['book_list_download'];
 			if (!$this->queryUpdate($this->table, $params, "where slug='book-list-download'")) $this->getResponse(503, "An Error Occure.");			
 		}
 		
 		if($uploadedFilesPaths['book_list_view']){
+			// 
+			$savedData = $this->queryResponse("select title from $this->table where slug='book-list-view'");
+			$previousFilePath = $savedData[0]['title'];
+			$this->deleteMedia($previousFilePath);
+			// 
 			$params = array();		
 			$params['title'] = $uploadedFilesPaths['book_list_view'];
 			if (!$this->queryUpdate($this->table, $params, "where slug='book-list-view'")) $this->getResponse(503, "An Error Occure.");			

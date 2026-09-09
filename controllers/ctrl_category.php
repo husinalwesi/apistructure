@@ -205,9 +205,22 @@ class category extends mainController
 		}
 		// 
 
+
 		$params = array();
 
 		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files		
+
+
+		if($uploadedFilesPaths['img'] && $ifSlugAlreadyExist[0]['img']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifSlugAlreadyExist[0]['img']);
+		}
+
+		if($uploadedFilesPaths['img_inner'] && $ifSlugAlreadyExist[0]['img_inner']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifSlugAlreadyExist[0]['img_inner']);
+		}
+
 
 		if ($slug)
 			$params['slug'] = $payload['fields']['slug'];		
@@ -248,7 +261,7 @@ class category extends mainController
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
 
-		$this->deleteMedia($data['image']['img']);
+		// $this->deleteMedia($data['image']['img']);
 		// $this->deleteMedia($data['image']['img_inner']);
 
 		$this->getResponse(200, 'deleted successfully..');

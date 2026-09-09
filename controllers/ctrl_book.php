@@ -67,7 +67,18 @@ class book extends mainController
 		$category = $this->getSecureParams("category");
 		if($category) $where.=" and category = '$category'";
 		// category
+		$related_book_id = $this->getSecureParams("related_book_id");
+		if($related_book_id) $where.=" and id != '$related_book_id'";
 
+		// $orderby = $this->getSecureParams("orderby");
+		// if($orderby) $where.=" and id != '$related_book_id'";
+		// <option value="menu_order">Default sorting</option>
+		// <option value="popularity" selected="selected">Sort by popularity</option>
+		// <option value="rating">Sort by average rating</option>
+		// <option value="date">Sort by latest</option>
+		// <option value="price">Sort by price: low to high</option>
+		// <option value="price-desc">Sort by price: high to low</option>		
+	
 
 		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
 		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where $handlePagination"));
@@ -213,8 +224,7 @@ class book extends mainController
 		$payload = $this->getRequestData();
 
 		$ifIDAlreadyExist = $this->queryResponse("select * from $this->table where id='$id'");
-		if (!$ifIDAlreadyExist)
-			$this->getResponse(501, 'there is no content with this ID');
+		if (!$ifIDAlreadyExist) $this->getResponse(501, 'there is no content with this ID');
 
 
 		$slug = $payload['fields']['slug'];		
@@ -273,6 +283,18 @@ class book extends mainController
 			$params['img'] = $uploadedFilesPaths['img'];
 		if ($uploadedFilesPaths['inner_img'])
 			$params['inner_img'] = $uploadedFilesPaths['inner_img'];		
+
+
+		if($uploadedFilesPaths['img'] && $ifIDAlreadyExist[0]['img']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifIDAlreadyExist[0]['img']);
+		}
+
+		if($uploadedFilesPaths['inner_img'] && $ifIDAlreadyExist[0]['inner_img']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifIDAlreadyExist[0]['inner_img']);
+		}
+
 
 		if ($slug)
 			$params['slug'] = $payload['fields']['slug'];		
