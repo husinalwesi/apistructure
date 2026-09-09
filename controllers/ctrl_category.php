@@ -322,6 +322,7 @@ class category extends mainController
 
 		$result = $this->queryResponse("select count(id) as 'count' from book where category='" . $temp['id'] . "'");
 		$temp['book_in_category'] = $result[0]['count'];		
+		
 		return $temp;
 	}
 

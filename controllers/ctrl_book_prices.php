@@ -1,8 +1,8 @@
 <?php
-class rates extends mainController
+class book_prices extends mainController
 {
-	var $table = "rates";
-	var $querySelector = array('id', 'bookid', 'nickname', 'email', 'review', 'created_date', 'userid', 'rate', 'is_deleted');
+	var $table = "book_prices";
+	var $querySelector = array('id', 'country', 'price', 'created_date', 'owner', 'is_deleted', 'bookid');
 	public function __construct()
 	{
 		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
@@ -63,14 +63,18 @@ class rates extends mainController
 		// 
 		$where = "";
 		$show_deleted = $this->getSecureParams("show_deleted");
-		if ($show_deleted === 'true') $where = "where is_deleted='1'";
-		else if ($show_deleted === 'false') $where = "where is_deleted='0'";
+		if ($show_deleted === 'true')
+			$where = "where is_deleted='1'";
+		else if ($show_deleted === 'false')
+			$where = "where is_deleted='0'";
 
 		$bookid = $this->getSecureParams("bookid");		
-		if($bookid) $where.= " and bookid = '$bookid'";
+		if($bookid) $where.= " and bookid='$bookid'";
+
 
 		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
 		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where order by created_date desc $handlePagination"));
+
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -128,32 +132,17 @@ class rates extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['bookid', 'review', 'rate']);
+		$this->checkRequiredFields(['country', 'price', 'owner', 'bookid']);
+
 		
-		if (
-			!(
-				// Case 1: userid only
-				($payload['fields']['userid'] && !$payload['fields']['nickname'] && !$payload['fields']['email'])
-
-				||
-
-				// Case 2: nickname + email only
-				($payload['fields']['nickname'] && $payload['fields']['email'] && !$payload['fields']['userid'])
-			)
-		) {
-			$this->getResponse(501, "Missing required field(s): {nickname, email, userid}");
-		}
-
 		$params = array(
 			'id' => '',
-			'bookid' => $payload['fields']['bookid'],			
-			'nickname' => $payload['fields']['nickname'],
-			'email' => $payload['fields']['email'],
-			'review' => $payload['fields']['review'],
-			'userid' => $payload['fields']['userid'],//to get from token passed in header
-			'rate' => $payload['fields']['rate'],			
+			'country' => $payload['fields']['country'],			
+			'price' => $payload['fields']['price'],
 			'created_date' => time(),
-			'is_deleted' => '0'
+			'is_deleted' => '0',
+			'owner' => $payload['fields']['owner'],//to get from token passed in header
+			'bookid' => $payload['fields']['bookid'],
 		);
 
 		if (!$newID = $this->queryInsert($this->table, $params))
@@ -171,28 +160,26 @@ class rates extends mainController
 
 		$payload = $this->getRequestData();
 
-		$ifIDAlreadyExist = $this->queryResponse("select * from $this->table where id='$id'");
-		if (!$ifIDAlreadyExist) $this->getResponse(501, 'there is no rate with this id');
+		$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where id='$id'");
+		if (!$ifSlugAlreadyExist)
+			$this->getResponse(501, 'there is no category with this id');
 
 
+		$country = $payload['fields']['country'];		
+		$price = $payload['fields']['price'];
+		$owner = $payload['fields']['owner'];
 		$bookid = $payload['fields']['bookid'];		
-		$nickname = $payload['fields']['nickname'];
-		$email = $payload['fields']['email'];
-		$review = $payload['fields']['review'];		
-		$userid = $payload['fields']['userid'];
-		$rate = $payload['fields']['rate'];		
 
-		if (!$bookid && !$review && !$rate && !$nickname && !$email && !$userid)
-			$this->getResponse(501, 'there is nothing to be updated!');
-
+		if (!$country && !$price && !$owner && !$bookid)
+			$this->getResponse(501, 'there is nothing to be updated!');		
 
 		$params = array();
-		if ($bookid) $params['bookid'] = $payload['fields']['bookid'];
-		if ($nickname) $params['nickname'] = $payload['fields']['nickname'];
-		if ($email) $params['email'] = $payload['fields']['email'];
-		if ($review) $params['review'] = $payload['fields']['review'];
-		if ($userid) $params['userid'] = $payload['fields']['userid'];
-		if ($rate) $params['rate'] = $payload['fields']['rate'];
+
+		if ($country) $params['country'] = $payload['fields']['country'];		
+		if ($price) $params['price'] = $payload['fields']['price'];		
+		if ($owner) $params['owner'] = $payload['fields']['owner'];		
+		if ($bookid) $params['bookid'] = $payload['fields']['bookid'];				
+
 
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
@@ -215,34 +202,23 @@ class rates extends mainController
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
 
+		// $this->deleteMedia($data['image']['img']);
+		// $this->deleteMedia($data['image']['img_inner']);
+
 		$this->getResponse(200, 'deleted successfully..');
 	}
 
-	public function modelRateData($temp, $fullPathImage = true)
+	public function modelPricesData($temp, $fullPathImage = true)
 	{
-		$temp['is_deleted'] = +$temp['is_deleted'] === 1;
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['is_deleted'] = +$temp['is_deleted'] === 1;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
+
+		
 		$result = $this->queryResponse("select * from book where id='" . $temp['bookid'] . "'");
 		$temp['book'] = $this->modelBookData($result[0]);
-		// 
-		$temp['user'] = array();
+		unset($temp['bookid']);
 
-		if($temp['userid']){
-			$userDetails = $this->getAdminByIDFn($temp['userid']);
-
-			$temp['user']['nickname'] = $userDetails['name'];
-			$temp['user']['email'] = $userDetails['username'];
-			$temp['user']['userid'] = $temp['userid'];
-		}else{
-			$temp['user']['nickname'] = $temp['nickname'];
-			$temp['user']['email'] = $temp['email'];
-			$temp['user']['userid'] = null;			
-		}
-			unset($temp['nickname']);
-			unset($temp['email']);
-			unset($temp['userid']);
-			unset($temp['bookid']);			
-		// 
 		return $temp;
 	}
 
@@ -262,13 +238,13 @@ class rates extends mainController
 		$temp['category'] = $this->getCategoryByIDFn($temp['category']);
 
 		return $temp;
-	}	
+	}		
 
 	function modelAllData($temp, $fullPathImage = true)
 	{
 		$data = array();
 		foreach ($temp as $key => $value) {
-			$data[] = $this->modelRateData($temp[$key], $fullPathImage);
+			$data[] = $this->modelPricesData($temp[$key], $fullPathImage);
 		}
 		return $data;
 	}

@@ -20,7 +20,9 @@ class book extends mainController
 		'category',
 		'created_date',
 		'owner_id',
-		'is_deleted'
+		'is_deleted',
+		'index_file',
+		'file'
 	);
 	public function __construct()
 	{
@@ -176,11 +178,14 @@ class book extends mainController
 		if ($ifSlugAlreadyExist) $this->getResponse(501, 'slug already exist, use another one');		
 
 		// $this->checkRequiredFiles(['img', 'inner_img']);				
-		$this->checkRequiredFiles(['img']);
+		$this->checkRequiredFiles(['img', 'file', 'index_file']);
 		
 		$filesToBeUploaded = array();
 		$filesToBeUploaded['img'] = $payload['files']['img'];
 		$filesToBeUploaded['inner_img'] = $payload['files']['inner_img'];
+
+		$filesToBeUploaded['file'] = $payload['files']['file'];
+		$filesToBeUploaded['index_file'] = $payload['files']['index_file'];		
 
 		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files		
 
@@ -205,6 +210,9 @@ class book extends mainController
 			'created_date' => time(),
 			'owner_id' => '11',//to get from token passed in header
 			'is_deleted' => '0',
+
+			'file' => $uploadedFilesPaths['file'],
+			'index_file' => $uploadedFilesPaths['index_file'],			
 		);
 
 		if (!$newSlugID = $this->queryInsert($this->table, $params))
@@ -246,11 +254,18 @@ class book extends mainController
 		if ($payload['files']['inner_img'])
 			$filesToBeUploaded['inner_img'] = $payload['files']['inner_img'];
 
+		if ($payload['files']['file'])
+			$filesToBeUploaded['file'] = $payload['files']['file'];
+		if ($payload['files']['index_file'])
+			$filesToBeUploaded['index_file'] = $payload['files']['index_file'];		
+
 
 
 		if (
 			!$filesToBeUploaded['img'] &&
 			!$filesToBeUploaded['inner_img'] &&
+			!$filesToBeUploaded['file'] &&
+			!$filesToBeUploaded['index_file'] &&			
 			!$slug &&
 			!$title &&
 			!$short_desc &&
@@ -282,8 +297,23 @@ class book extends mainController
 		if ($uploadedFilesPaths['img'])
 			$params['img'] = $uploadedFilesPaths['img'];
 		if ($uploadedFilesPaths['inner_img'])
-			$params['inner_img'] = $uploadedFilesPaths['inner_img'];		
+			$params['inner_img'] = $uploadedFilesPaths['inner_img'];	
+		
+		if ($uploadedFilesPaths['file'])
+			$params['file'] = $uploadedFilesPaths['file'];	
 
+		if ($uploadedFilesPaths['index_file'])
+			$params['index_file'] = $uploadedFilesPaths['index_file'];	
+
+		if($uploadedFilesPaths['file'] && $ifIDAlreadyExist[0]['file']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifIDAlreadyExist[0]['file']);
+		}
+
+		if($uploadedFilesPaths['index_file'] && $ifIDAlreadyExist[0]['index_file']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifIDAlreadyExist[0]['index_file']);
+		}
 
 		if($uploadedFilesPaths['img'] && $ifIDAlreadyExist[0]['img']){
 			// if there is a new image, also there is an old image, so delete the old image file.
@@ -352,6 +382,11 @@ class book extends mainController
 
 		$temp['img'] = IMG_BASE_URL . $temp['img'];
 		$temp['inner_img'] = IMG_BASE_URL . $temp['inner_img'];			
+
+
+		$temp['index_file'] = IMG_BASE_URL . $temp['index_file'];			
+		$temp['file'] = IMG_BASE_URL . $temp['file'];					
+
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 		$temp['is_deleted'] = +$temp['is_deleted'] === 1 ? true : false;
 		$temp['owner_id'] = $this->getAdminByIDFn($temp['owner_id']);
