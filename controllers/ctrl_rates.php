@@ -222,7 +222,7 @@ class rates extends mainController
 	{
 		$temp['is_deleted'] = +$temp['is_deleted'] === 1;
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
-		$result = $this->queryResponse("select * from book where id='" . $temp['bookid'] . "'");
+		$result = $this->queryResponse("select * from books_with_avg_rate where id='" . $temp['bookid'] . "'");
 		$temp['book'] = $this->modelBookData($result[0]);
 		// 
 		$temp['user'] = array();
@@ -261,8 +261,28 @@ class rates extends mainController
 
 		$temp['category'] = $this->getCategoryByIDFn($temp['category']);
 
+		$temp['prices'] = $this->queryResponse("select * from book_prices where is_deleted = '0' and bookid='".$temp['id']."'");
+
+		foreach ($temp['prices'] as $key => $value) {
+			$temp['prices'][$key] = $this->modelPricesData($temp['prices'][$key]);
+		}
+
 		return $temp;
 	}	
+
+	public function modelPricesData($temp, $fullPathImage = true)
+	{
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['is_deleted'] = +$temp['is_deleted'] === 1;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
+
+		
+		// $result = $this->queryResponse("select * from book where id='" . $temp['bookid'] . "'");
+		// $temp['book'] = $this->modelBookData($result[0]);
+		unset($temp['bookid']);
+
+		return $temp;
+	}		
 
 	function modelAllData($temp, $fullPathImage = true)
 	{

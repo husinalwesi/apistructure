@@ -72,18 +72,26 @@ class book extends mainController
 		$related_book_id = $this->getSecureParams("related_book_id");
 		if($related_book_id) $where.=" and id != '$related_book_id'";
 
-		// $orderby = $this->getSecureParams("orderby");
-		// if($orderby) $where.=" and id != '$related_book_id'";
-		// <option value="menu_order">Default sorting</option>
-		// <option value="popularity" selected="selected">Sort by popularity</option>
-		// <option value="rating">Sort by average rating</option>
-		// <option value="date">Sort by latest</option>
-		// <option value="price">Sort by price: low to high</option>
-		// <option value="price-desc">Sort by price: high to low</option>		
-	
+		$orderby = $this->getSecureParams("orderby");
+		$order = "";
+		if($orderby === 'rating' || $orderby === 'date' || $orderby === 'pricelowtohigh' || $orderby === 'pricehightolow'){
+			// 
+			if($orderby === 'rating'){
+				$order = "order by avg_rate desc";
+			}
+			// 
+			if($orderby === 'pricelowtohigh' || $orderby === 'pricehightolow'){
+				$orderAscDesc = $orderby === 'pricelowtohigh' ? "asc" : "desc";
+				$order = "order by price $orderAscDesc";
+			}
+			// 
+			if($orderby === 'date'){
+				$order = "order by created_date desc";
+			}
+		}
 
-		$data["config"] = $this->getTotalWhere($this->table, 'id', $where);
-		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from $this->table $where $handlePagination"));
+		$data["config"] = $this->getTotalWhere("books_with_avg_rate", 'id', $where, "");
+		$data["data"] = $this->modelAllData($this->queryResponse("select $querySelectorString from books_with_avg_rate $where $order $handlePagination"));
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}
@@ -92,7 +100,7 @@ class book extends mainController
 	public function getItemByIDFn($id, $where = '')
 	{
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		$result = $this->queryResponse("select $querySelectorString from $this->table where id='$id' $where");
+		$result = $this->queryResponse("select $querySelectorString from books_with_avg_rate where id='$id' $where");
 		if (!$result || count($result) === 0)
 			return null;
 		$data = array();
@@ -105,7 +113,7 @@ class book extends mainController
 	public function getItemBySlugFn($slug, $where = '')
 	{
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
+		$result = $this->queryResponse("select $querySelectorString from books_with_avg_rate where slug='$slug' $where");
 
 		if (!$result || count($result) === 0)
 			return null;
@@ -393,8 +401,28 @@ class book extends mainController
 
 		$temp['category'] = $this->getCategoryByIDFn($temp['category']);		
 
+		$temp['prices'] = $this->queryResponse("select * from book_prices where is_deleted = '0' and bookid='".$temp['id']."'");
+
+		foreach ($temp['prices'] as $key => $value) {
+			$temp['prices'][$key] = $this->modelPricesData($temp['prices'][$key]);
+		}
+		
 		return $temp;
 	}
+
+	public function modelPricesData($temp, $fullPathImage = true)
+	{
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['is_deleted'] = +$temp['is_deleted'] === 1;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
+
+		
+		// $result = $this->queryResponse("select * from book where id='" . $temp['bookid'] . "'");
+		// $temp['book'] = $this->modelBookData($result[0]);
+		unset($temp['bookid']);
+
+		return $temp;
+	}	
 
 	function modelAllData($temp)
 	{

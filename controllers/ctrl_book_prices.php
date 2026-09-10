@@ -215,7 +215,7 @@ class book_prices extends mainController
 		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
 
 		
-		$result = $this->queryResponse("select * from book where id='" . $temp['bookid'] . "'");
+		$result = $this->queryResponse("select * from books_with_avg_rate where id='" . $temp['bookid'] . "'");
 		$temp['book'] = $this->modelBookData($result[0]);
 		unset($temp['bookid']);
 

@@ -352,11 +352,11 @@ public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
     );
   }
 
-  public function getTotalWhere($table_name, $param, $where)
+  public function getTotalWhere($table_name, $param, $where, $order="")
   {
+    // order by created_date desc
     $total = "0";
-    // $this->getResponse(200,"select count($param) as '$param' from $table_name $where");
-    $total_obj = $this->queryResponse("select count($param) as '$param' from $table_name $where order by created_date desc");
+    $total_obj = $this->queryResponse("select count($param) as '$param' from $table_name $where $order");
     if ($total_obj)
       $total = $total_obj[0][$param];
     // 
@@ -390,7 +390,7 @@ public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
     // 
     $offset = ($limit * $page) - $limit;
     // 
-    return "limit $limit OFFSET $offset";
+    return "limit $limit offset $offset";
   }
 
   public function timeStampToDate($val, $type = 'dateTime')
