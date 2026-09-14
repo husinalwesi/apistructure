@@ -146,6 +146,12 @@ class mainController extends main
     if($tokenDetails) return $tokenDetails['user_id'];
     return false;
 	}
+
+	public function getUserRole(){
+    $tokenDetails = $this->getTokenDetailsByAuthorizationToken();
+    if($tokenDetails) return $tokenDetails['role'];
+    return false;
+	}  
     
   public function getResponse($status, $msg = '')
   {

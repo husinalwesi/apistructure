@@ -68,7 +68,8 @@ if (
                 'contactform',
                 'rates',
                 'events',
-                'book_prices'
+                'book_prices',
+                'orders'
             )
         ))
 ) {
