@@ -25,8 +25,25 @@ class mainController extends main
 
   public function checkAuth()
   {
-    // $param = $this->getSecureParams('param');
-    return true;
+
+    $userID = $this->getUserID();
+    if($userID) return true;
+    // always if user logged in let him access anything..
+    // should handle refresh token also
+    // 
+
+    $this->getResponse(401, 'Unauthorized');
+   
+    // if(!$userID && !$defaultCheck)
+
+    // if($defaultCheck){
+    //   if($userID) return true;
+    //   return false;
+    // }else{
+    //   // in $defaultCheck, user dont have to log in to access the API..
+    //   return true;
+    // }
+
     // 1730746016
     // + ' | ' + time()
     // $this->getResponse(200, $param.' | '.time());
@@ -99,6 +116,37 @@ class mainController extends main
   /**
    * print api response as json string
    */
+	public function getAuthorizationToken(){
+	    $headers = getallheaders();
+		$Authorization = $headers['Authorization'] ?? '';
+    if (!str_contains($Authorization, 'Bearer ')) return '';    
+		$Authorization = str_replace("Bearer ", "", $Authorization);
+
+		return $Authorization;
+	}
+
+	public function getTokenDetailsByAuthorizationToken(){
+    $authorization = $this->getAuthorizationToken();
+    if($authorization){
+      $details = $this->queryResponse("select * from api_tokens where access_token_hash = '" . $authorization . "'");
+
+      if($details){
+        $details2 = $this->queryResponse("select * from api_tokens where access_token_hash = '" . $authorization . "' and access_expires_at > NOW()");
+        if($details && !$details2) $this->getResponse(401, 'token expired!');
+        return $details ? $details[0] : false;
+      }
+      return false;
+
+    }
+		return false;
+	}	  
+
+	public function getUserID(){
+    $tokenDetails = $this->getTokenDetailsByAuthorizationToken();
+    if($tokenDetails) return $tokenDetails['user_id'];
+    return false;
+	}
+    
   public function getResponse($status, $msg = '')
   {
     ob_end_clean();
@@ -336,6 +384,21 @@ class mainController extends main
     return 0;
   }
 
+  public function queryDelete($tableName, $where = '')
+  {
+      $db = new db();
+
+      $sql = "delete from $tableName $where";
+      // $this->getResponse(200,$sql);
+      $db->setQuery($sql);
+
+      if ($db->getQuery() !== false) {
+          return 1;
+      }
+
+      return 0;
+  }
+
 
   public function sendMail($email, $content)
   {
@@ -496,6 +559,16 @@ class mainController extends main
     echo $content;
     exit;
   }
+
+
+  function generateToken(){
+    return bin2hex(random_bytes(32));
+  }
+
+  function hashToken($token) {
+    return hash('sha256', $token);
+  }  
+
 
 }
 ?>

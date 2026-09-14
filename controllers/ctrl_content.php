@@ -5,7 +5,7 @@ class content extends mainController
 	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date', 'owner', 'isDeleted');
 	public function __construct()
 	{
-		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
+		// 		
 		// handle header params // token
 
 
@@ -44,7 +44,7 @@ class content extends mainController
 
 	public function getItems()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$handlePagination = $this->handlePagination();
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
@@ -89,7 +89,7 @@ class content extends mainController
 	}
 
 	public function getInfo($msg = ''){
-		$this->checkAuth();
+		// $this->checkAuth();
 		// 
 		$data3 = array();
 
@@ -173,7 +173,7 @@ class content extends mainController
 	}
 
 	public function getContact(){
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = array();
 
 		$temp = array('phone','mobile','email', 'map');
@@ -196,7 +196,7 @@ class content extends mainController
 	}
 
 	public function getSocial(){
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = array();
 
 		$temp = array('google','x','whatsapp','instagram','linkedin','facebook');
@@ -212,7 +212,7 @@ class content extends mainController
 
 	public function getAllItemByID($slug)
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = $this->getItemBySlugFn($slug, " and isDeleted='0'");//search in content pages
 
 		if (!$data) {
@@ -250,7 +250,7 @@ class content extends mainController
 
 	public function getItemByID($slug)
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = $this->getItemBySlugFn($slug);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given slug.");

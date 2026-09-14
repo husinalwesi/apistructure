@@ -5,7 +5,7 @@ class contactform extends mainController
 	var $querySelector = array('id', 'name', 'phone', 'email', 'message', 'created_date', 'status');
 	public function __construct()
 	{
-		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
+		// 		
 		// handle header params // token
 
 
@@ -23,9 +23,10 @@ class contactform extends mainController
 			$this->getItemByID($params[0]);
 		} elseif (count($params) === 0 && $this->isAllowedMethod('POST')) {
 			$this->createItem();
-		} elseif (count($params) === 1 && $this->isAllowedMethod('PUT')) {
-			$this->updateItem($params[0]);
 		}
+		//  elseif (count($params) === 1 && $this->isAllowedMethod('PUT')) {
+		// 	$this->updateItem($params[0]);
+		// }
 		//  elseif (count($params) === 1 && $this->isAllowedMethod('DELETE')) {
 		// 	$this->deleteItem($params[0]);
 		// }
@@ -33,27 +34,27 @@ class contactform extends mainController
 		$this->getResponse(422, "Method not supported");
 	}
 
-	public function getItemsWithOutPagination()
-	{
-		$this->checkAuth();
-		// $querySelectorString = $this->getQuerySelector($this->querySelector);
-		$data = array();
-		// 
-		$where = "";
-		$show_deleted = $this->getSecureParams("show_deleted");
-		if ($show_deleted === 'true')
-			$where = "where isDeleted='1'";
-		else if ($show_deleted === 'false')
-			$where = "where isDeleted='0'";
+	// public function getItemsWithOutPagination()
+	// {
+	// 	$this->checkAuth();
+	// 	// $querySelectorString = $this->getQuerySelector($this->querySelector);
+	// 	$data = array();
+	// 	// 
+	// 	$where = "";
+	// 	$show_deleted = $this->getSecureParams("show_deleted");
+	// 	if ($show_deleted === 'true')
+	// 		$where = "where isDeleted='1'";
+	// 	else if ($show_deleted === 'false')
+	// 		$where = "where isDeleted='0'";
 
-		$data = $this->queryResponse("select id, title from $this->table $where");
-		foreach ($data as $key => $value) {
-			$data[$key]['count'] = $this->queryResponse("select count(id) as 'count' from book where category='" . $data[$key]['id'] . "'");
-			$data[$key]['count'] = $data[$key]['count'][0]['count'];
-		}
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}
+	// 	$data = $this->queryResponse("select id, title from $this->table $where");
+	// 	foreach ($data as $key => $value) {
+	// 		$data[$key]['count'] = $this->queryResponse("select count(id) as 'count' from book where category='" . $data[$key]['id'] . "'");
+	// 		$data[$key]['count'] = $data[$key]['count'][0]['count'];
+	// 	}
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }
 
 	public function getItems()
 	{
@@ -72,18 +73,18 @@ class contactform extends mainController
 		$this->getResponse(200);
 	}
 
-	public function getItemBySlugFn($slug, $where = '', $fullPathImage = true)
-	{
-		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
-		if (!$result || count($result) === 0)
-			return null;
-		$data = array();
-		$data = $this->modelAllData($result, $fullPathImage);
-		if (!$data || count($data) === 0)
-			return null;
-		return $data[0];
-	}	
+	// public function getItemBySlugFn($slug, $where = '', $fullPathImage = true)
+	// {
+	// 	$querySelectorString = $this->getQuerySelector($this->querySelector);
+	// 	$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
+	// 	if (!$result || count($result) === 0)
+	// 		return null;
+	// 	$data = array();
+	// 	$data = $this->modelAllData($result, $fullPathImage);
+	// 	if (!$data || count($data) === 0)
+	// 		return null;
+	// 	return $data[0];
+	// }	
 
 	public function getItemByIDFn($id, $where = '', $fullPathImage = true)
 	{
@@ -98,16 +99,16 @@ class contactform extends mainController
 		return $data[0];
 	}
 
-	public function getItemBySlug($slug)
-	{
-		$this->checkAuth();
-		$data = $this->getItemBySlugFn($slug);
-		if (!$data)
-			$this->getResponse(404, "No data found for the given Slug.");
-		// $data['count'] = 3;
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}	
+	// public function getItemBySlug($slug)
+	// {
+	// 	$this->checkAuth();
+	// 	$data = $this->getItemBySlugFn($slug);
+	// 	if (!$data)
+	// 		$this->getResponse(404, "No data found for the given Slug.");
+	// 	// $data['count'] = 3;
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }	
 
 	public function getItemByID($slug)
 	{
@@ -121,7 +122,7 @@ class contactform extends mainController
 
 	public function createItem()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$payload = $this->getRequestData();
 
 		$this->checkRequiredFields(['name', 'phone', 'email', 'message']);
@@ -145,65 +146,65 @@ class contactform extends mainController
 		$this->getResponse(200, 'created successfully..');
 	}
 
-	public function updateItem($id)
-	{
-		$this->checkAuth();
+	// public function updateItem($id)
+	// {
+	// 	$this->checkAuth();
 
-		$payload = $this->getRequestData();
+	// 	$payload = $this->getRequestData();
 
-		$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where id='$id'");
-		if (!$ifSlugAlreadyExist)
-			$this->getResponse(501, 'there is no category with this id');
-
-
-		$slug = $payload['fields']['slug'];		
-		$title = $payload['fields']['title'];
-		$description = $payload['fields']['description'];
-
-		$filesToBeUploaded = array();
-		if ($payload['files']['img'])
-			$filesToBeUploaded['img'] = $payload['files']['img'];
-		if ($payload['files']['img_inner'])
-			$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
+	// 	$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where id='$id'");
+	// 	if (!$ifSlugAlreadyExist)
+	// 		$this->getResponse(501, 'there is no category with this id');
 
 
-		// if (!$title && !$description && !$filesToBeUploaded['img'] && !$filesToBeUploaded['img_inner'])		
-		if (!$title && !$description && !$filesToBeUploaded['img'] && !$slug)
-			$this->getResponse(501, 'there is nothing to be updated!');
+	// 	$slug = $payload['fields']['slug'];		
+	// 	$title = $payload['fields']['title'];
+	// 	$description = $payload['fields']['description'];
+
+	// 	$filesToBeUploaded = array();
+	// 	if ($payload['files']['img'])
+	// 		$filesToBeUploaded['img'] = $payload['files']['img'];
+	// 	if ($payload['files']['img_inner'])
+	// 		$filesToBeUploaded['img_inner'] = $payload['files']['img_inner'];
 
 
-		// check if new slug is already used or not
-		$newSlug = $payload['fields']['slug'];
-		if($newSlug){
-			$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where slug='$newSlug' and id != '$id'");
-			if ($ifSlugAlreadyExist) $this->getResponse(501, 'the new slug already exist, use another one');
-		}
-		// 
+	// 	// if (!$title && !$description && !$filesToBeUploaded['img'] && !$filesToBeUploaded['img_inner'])		
+	// 	if (!$title && !$description && !$filesToBeUploaded['img'] && !$slug)
+	// 		$this->getResponse(501, 'there is nothing to be updated!');
 
-		$params = array();
 
-		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files		
+	// 	// check if new slug is already used or not
+	// 	$newSlug = $payload['fields']['slug'];
+	// 	if($newSlug){
+	// 		$ifSlugAlreadyExist = $this->queryResponse("select * from $this->table where slug='$newSlug' and id != '$id'");
+	// 		if ($ifSlugAlreadyExist) $this->getResponse(501, 'the new slug already exist, use another one');
+	// 	}
+	// 	// 
 
-		if ($slug)
-			$params['slug'] = $payload['fields']['slug'];		
-		if ($title)
-			$params['title'] = $payload['fields']['title'];
-		if ($description)
-			$params['description'] = $payload['fields']['description'];
+	// 	$params = array();
 
-		if ($uploadedFilesPaths['img'])
-			$params['img'] = $uploadedFilesPaths['img'];
-		if ($uploadedFilesPaths['img_inner'])
-			$params['img_inner'] = $uploadedFilesPaths['img_inner'];
+	// 	$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files		
 
-		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
-			$this->getResponse(503, "An Error Occure.");
+	// 	if ($slug)
+	// 		$params['slug'] = $payload['fields']['slug'];		
+	// 	if ($title)
+	// 		$params['title'] = $payload['fields']['title'];
+	// 	if ($description)
+	// 		$params['description'] = $payload['fields']['description'];
 
-		$data = $this->getItemByIDFn($id);
+	// 	if ($uploadedFilesPaths['img'])
+	// 		$params['img'] = $uploadedFilesPaths['img'];
+	// 	if ($uploadedFilesPaths['img_inner'])
+	// 		$params['img_inner'] = $uploadedFilesPaths['img_inner'];
 
-		$this->dataArray = $data;
-		$this->getResponse(200, 'updated successfully..');
-	}
+	// 	if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
+	// 		$this->getResponse(503, "An Error Occure.");
+
+	// 	$data = $this->getItemByIDFn($id);
+
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200, 'updated successfully..');
+	// }
 
 	// public function deleteItem($id)
 	// {

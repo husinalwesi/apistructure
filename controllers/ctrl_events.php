@@ -6,7 +6,7 @@ class events extends mainController
 	var $querySelector = array('id', 'userid', 'created_date', 'is_deleted', 'description', 'img');
 	public function __construct()
 	{
-		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
+		// 		
 		// handle header params // token
 
 
@@ -37,7 +37,7 @@ class events extends mainController
 
 	public function getItemsWithOutPagination()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		// $querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
 		// 
@@ -58,7 +58,7 @@ class events extends mainController
 
 	public function getItems()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$handlePagination = $this->handlePagination();
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
@@ -76,18 +76,18 @@ class events extends mainController
 		$this->getResponse(200);
 	}
 
-	public function getItemBySlugFn($slug, $where = '', $fullPathImage = true)
-	{
-		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
-		if (!$result || count($result) === 0)
-			return null;
-		$data = array();
-		$data = $this->modelAllData($result, $fullPathImage);
-		if (!$data || count($data) === 0)
-			return null;
-		return $data[0];
-	}	
+	// public function getItemBySlugFn($slug, $where = '', $fullPathImage = true)
+	// {
+	// 	$querySelectorString = $this->getQuerySelector($this->querySelector);
+	// 	$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
+	// 	if (!$result || count($result) === 0)
+	// 		return null;
+	// 	$data = array();
+	// 	$data = $this->modelAllData($result, $fullPathImage);
+	// 	if (!$data || count($data) === 0)
+	// 		return null;
+	// 	return $data[0];
+	// }	
 
 	public function getItemByIDFn($id, $where = '', $fullPathImage = true)
 	{
@@ -102,20 +102,20 @@ class events extends mainController
 		return $data[0];
 	}
 
-	public function getItemBySlug($slug)
-	{
-		$this->checkAuth();
-		$data = $this->getItemBySlugFn($slug);
-		if (!$data)
-			$this->getResponse(404, "No data found for the given Slug.");
-		// $data['count'] = 3;
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}	
+	// public function getItemBySlug($slug)
+	// {
+	// 	// $this->checkAuth();
+	// 	$data = $this->getItemBySlugFn($slug);
+	// 	if (!$data)
+	// 		$this->getResponse(404, "No data found for the given Slug.");
+	// 	// $data['count'] = 3;
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }	
 
 	public function getItemByID($slug)
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = $this->getItemByIDFn($slug);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given ID.");
@@ -129,7 +129,7 @@ class events extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['userid', 'description']);
+		$this->checkRequiredFields(['description']);
 
 		$this->checkRequiredFiles(['img']);
 
@@ -141,7 +141,7 @@ class events extends mainController
 		
 		$params = array(
 			'id' => '',
-			'userid' => $payload['fields']['userid'],			
+			'userid' => $this->getUserID(),			
 			'created_date' => time(),
 			'is_deleted' => '0',
 			'description' => $payload['fields']['description'],
@@ -167,14 +167,13 @@ class events extends mainController
 		if (!$ifIDAlreadyExist) $this->getResponse(501, 'there is no event with this id');
 
 
-		$userid = $payload['fields']['userid'];		
 		$description = $payload['fields']['description'];
 
 		$filesToBeUploaded = array();
 		if ($payload['files']['img']) $filesToBeUploaded['img'] = $payload['files']['img'];
 
 
-		if (!$userid && !$description && !$filesToBeUploaded['img'])
+		if (!$description && !$filesToBeUploaded['img'])
 			$this->getResponse(501, 'there is nothing to be updated!');
 
 		$params = array();
@@ -187,8 +186,6 @@ class events extends mainController
 		}
 
 
-		if ($userid)
-			$params['userid'] = $payload['fields']['userid'];		
 		if ($description)
 			$params['description'] = $payload['fields']['description'];
 

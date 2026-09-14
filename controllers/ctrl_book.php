@@ -26,7 +26,7 @@ class book extends mainController
 	);
 	public function __construct()
 	{
-		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
+		// 		
 		// handle header params // token
 
 
@@ -56,7 +56,7 @@ class book extends mainController
 
 	public function getItems()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$handlePagination = $this->handlePagination();
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
@@ -144,22 +144,22 @@ class book extends mainController
 
 	public function getItemBySlug($slug)
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = $this->getItemBySlugFn($slug);
 		if (!$data) $this->getResponse(404, "No data found for the given Slug.");
 		$this->dataArray = $data;
 		$this->getResponse(200);
 	}	
 
-	public function getItemByID($id)
-	{
-		$this->checkAuth();
-		$data = $this->getItemByIDFn($id);
-		if (!$data)
-			$this->getResponse(404, "No data found for the given ID.");
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}
+	// public function getItemByID($id)
+	// {
+	// 	// $this->checkAuth();
+	// 	$data = $this->getItemByIDFn($id);
+	// 	if (!$data)
+	// 		$this->getResponse(404, "No data found for the given ID.");
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }
 
 	public function createItem()
 	{
@@ -216,7 +216,7 @@ class book extends mainController
 			'category' => $payload['fields']['category'],
 			
 			'created_date' => time(),
-			'owner_id' => '11',//to get from token passed in header
+			'owner_id' => $this->getUserID(),
 			'is_deleted' => '0',
 
 			'file' => $uploadedFilesPaths['file'],
@@ -397,7 +397,7 @@ class book extends mainController
 
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 		$temp['is_deleted'] = +$temp['is_deleted'] === 1 ? true : false;
-		$temp['owner_id'] = $this->getAdminByIDFn($temp['owner_id']);
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner_id']);
 
 		$temp['category'] = $this->getCategoryByIDFn($temp['category']);		
 

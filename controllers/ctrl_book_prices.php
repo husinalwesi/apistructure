@@ -5,7 +5,7 @@ class book_prices extends mainController
 	var $querySelector = array('id', 'country', 'price', 'created_date', 'owner', 'is_deleted', 'bookid');
 	public function __construct()
 	{
-		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
+		// 		
 		// handle header params // token
 
 
@@ -32,31 +32,31 @@ class book_prices extends mainController
 		$this->getResponse(422, "Method not supported");
 	}
 
-	public function getItemsWithOutPagination()
-	{
-		$this->checkAuth();
-		// $querySelectorString = $this->getQuerySelector($this->querySelector);
-		$data = array();
-		// 
-		$where = "";
-		$show_deleted = $this->getSecureParams("show_deleted");
-		if ($show_deleted === 'true')
-			$where = "where is_deleted='1'";
-		else if ($show_deleted === 'false')
-			$where = "where is_deleted='0'";
+	// public function getItemsWithOutPagination()
+	// {
+	// 	// $this->checkAuth(false);
+	// 	// $querySelectorString = $this->getQuerySelector($this->querySelector);
+	// 	$data = array();
+	// 	// 
+	// 	$where = "";
+	// 	$show_deleted = $this->getSecureParams("show_deleted");
+	// 	if ($show_deleted === 'true')
+	// 		$where = "where is_deleted='1'";
+	// 	else if ($show_deleted === 'false')
+	// 		$where = "where is_deleted='0'";
 
-		$data = $this->queryResponse("select id, title from $this->table $where");
-		foreach ($data as $key => $value) {
-			$data[$key]['count'] = $this->queryResponse("select count(id) as 'count' from book where category='" . $data[$key]['id'] . "'");
-			$data[$key]['count'] = $data[$key]['count'][0]['count'];
-		}
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}
+	// 	$data = $this->queryResponse("select id, title from $this->table $where");
+	// 	foreach ($data as $key => $value) {
+	// 		$data[$key]['count'] = $this->queryResponse("select count(id) as 'count' from book where category='" . $data[$key]['id'] . "'");
+	// 		$data[$key]['count'] = $data[$key]['count'][0]['count'];
+	// 	}
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }
 
 	public function getItems()
 	{
-		$this->checkAuth();
+		// $this->checkAuth(false);
 		$handlePagination = $this->handlePagination();
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
@@ -79,18 +79,18 @@ class book_prices extends mainController
 		$this->getResponse(200);
 	}
 
-	public function getItemBySlugFn($slug, $where = '', $fullPathImage = true)
-	{
-		$querySelectorString = $this->getQuerySelector($this->querySelector);
-		$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
-		if (!$result || count($result) === 0)
-			return null;
-		$data = array();
-		$data = $this->modelAllData($result, $fullPathImage);
-		if (!$data || count($data) === 0)
-			return null;
-		return $data[0];
-	}	
+	// public function getItemBySlugFn($slug, $where = '', $fullPathImage = true)
+	// {
+	// 	$querySelectorString = $this->getQuerySelector($this->querySelector);
+	// 	$result = $this->queryResponse("select $querySelectorString from $this->table where slug='$slug' $where");
+	// 	if (!$result || count($result) === 0)
+	// 		return null;
+	// 	$data = array();
+	// 	$data = $this->modelAllData($result, $fullPathImage);
+	// 	if (!$data || count($data) === 0)
+	// 		return null;
+	// 	return $data[0];
+	// }	
 
 	public function getItemByIDFn($id, $where = '', $fullPathImage = true)
 	{
@@ -105,20 +105,20 @@ class book_prices extends mainController
 		return $data[0];
 	}
 
-	public function getItemBySlug($slug)
-	{
-		$this->checkAuth();
-		$data = $this->getItemBySlugFn($slug);
-		if (!$data)
-			$this->getResponse(404, "No data found for the given Slug.");
-		// $data['count'] = 3;
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}	
+	// public function getItemBySlug($slug)
+	// {
+	// 	// $this->checkAuth(false);
+	// 	$data = $this->getItemBySlugFn($slug);
+	// 	if (!$data)
+	// 		$this->getResponse(404, "No data found for the given Slug.");
+	// 	// $data['count'] = 3;
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }	
 
 	public function getItemByID($slug)
 	{
-		$this->checkAuth();
+		// $this->checkAuth(false);
 		$data = $this->getItemByIDFn($slug);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given ID.");
@@ -132,7 +132,7 @@ class book_prices extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['country', 'price', 'owner', 'bookid']);
+		$this->checkRequiredFields(['country', 'price', 'bookid']);
 
 		
 		$params = array(
@@ -141,7 +141,7 @@ class book_prices extends mainController
 			'price' => $payload['fields']['price'],
 			'created_date' => time(),
 			'is_deleted' => '0',
-			'owner' => $payload['fields']['owner'],//to get from token passed in header
+			'owner' => $this->getUserID(),//to get from token passed in header
 			'bookid' => $payload['fields']['bookid'],
 		);
 
@@ -167,17 +167,15 @@ class book_prices extends mainController
 
 		$country = $payload['fields']['country'];		
 		$price = $payload['fields']['price'];
-		$owner = $payload['fields']['owner'];
 		$bookid = $payload['fields']['bookid'];		
 
-		if (!$country && !$price && !$owner && !$bookid)
+		if (!$country && !$price && !$bookid)
 			$this->getResponse(501, 'there is nothing to be updated!');		
 
 		$params = array();
 
 		if ($country) $params['country'] = $payload['fields']['country'];		
 		if ($price) $params['price'] = $payload['fields']['price'];		
-		if ($owner) $params['owner'] = $payload['fields']['owner'];		
 		if ($bookid) $params['bookid'] = $payload['fields']['bookid'];				
 
 
@@ -233,7 +231,7 @@ class book_prices extends mainController
 
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 		$temp['is_deleted'] = +$temp['is_deleted'] === 1 ? true : false;
-		$temp['owner_id'] = $this->getAdminByIDFn($temp['owner_id']);
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner_id']);
 
 		$temp['category'] = $this->getCategoryByIDFn($temp['category']);
 

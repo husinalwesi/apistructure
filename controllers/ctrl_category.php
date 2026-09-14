@@ -5,7 +5,7 @@ class category extends mainController
 	var $querySelector = array('id', 'slug', 'title', 'description', 'img', 'img_inner', 'owner', 'created_date', 'isDeleted', 'isActive');
 	public function __construct()
 	{
-		// $this->deleteMedia("/uploads/1759611600/68e21db164270_1756022608096.jpeg");		
+		// 		
 		// handle header params // token
 
 
@@ -37,7 +37,7 @@ class category extends mainController
 
 	public function getItemsWithOutPagination()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		// $querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
 		// 
@@ -59,7 +59,7 @@ class category extends mainController
 
 	public function getItems()
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$handlePagination = $this->handlePagination();
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$data = array();
@@ -108,7 +108,7 @@ class category extends mainController
 
 	public function getItemBySlug($slug)
 	{
-		$this->checkAuth();
+		// $this->checkAuth();
 		$data = $this->getItemBySlugFn($slug);
 		if (!$data)
 			$this->getResponse(404, "No data found for the given Slug.");
@@ -117,23 +117,23 @@ class category extends mainController
 		$this->getResponse(200);
 	}	
 
-	public function getItemByID($slug)
-	{
-		$this->checkAuth();
-		$data = $this->getItemByIDFn($slug);
-		if (!$data)
-			$this->getResponse(404, "No data found for the given ID.");
-		// $data['count'] = 3;
-		$this->dataArray = $data;
-		$this->getResponse(200);
-	}
+	// public function getItemByID($slug)
+	// {
+	// 	// $this->checkAuth();
+	// 	$data = $this->getItemByIDFn($slug);
+	// 	if (!$data)
+	// 		$this->getResponse(404, "No data found for the given ID.");
+	// 	// $data['count'] = 3;
+	// 	$this->dataArray = $data;
+	// 	$this->getResponse(200);
+	// }
 
 	public function createItem()
 	{
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['title', 'slug', 'description', 'owner']);
+		$this->checkRequiredFields(['title', 'slug', 'description']);
 
 		$this->checkRequiredFiles(['img']);
 		// $this->checkRequiredFiles(['img', 'img_inner']);		
@@ -156,7 +156,7 @@ class category extends mainController
 			'description' => $payload['fields']['description'],
 			'img' => $uploadedFilesPaths['img'],
 			'img_inner' => $uploadedFilesPaths['img_inner'],
-			'owner' => $payload['fields']['owner'],//to get from token passed in header
+			'owner' => $this->getUserID(),
 			'created_date' => time(),
 			'isDeleted' => '0'
 		);

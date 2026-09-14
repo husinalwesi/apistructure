@@ -61,7 +61,7 @@ if (
         !in_array(
             $controller,
             array(
-                'admins',
+                'auth',
                 'content',
                 'category',
                 'book',
