@@ -69,7 +69,8 @@ if (
                 'rates',
                 'events',
                 'book_prices',
-                'orders'
+                'orders',
+                'search'
             )
         ))
 ) {

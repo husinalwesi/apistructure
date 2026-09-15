@@ -267,6 +267,7 @@ class rates extends mainController
 			$temp['prices'][$key] = $this->modelPricesData($temp['prices'][$key]);
 		}
 
+		unset($temp['file']);
 		return $temp;
 	}	
 

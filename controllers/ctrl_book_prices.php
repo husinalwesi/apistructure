@@ -32,28 +32,6 @@ class book_prices extends mainController
 		$this->getResponse(422, "Method not supported");
 	}
 
-	// public function getItemsWithOutPagination()
-	// {
-	// 	// $this->checkAuth(false);
-	// 	// $querySelectorString = $this->getQuerySelector($this->querySelector);
-	// 	$data = array();
-	// 	// 
-	// 	$where = "";
-	// 	$show_deleted = $this->getSecureParams("show_deleted");
-	// 	if ($show_deleted === 'true')
-	// 		$where = "where is_deleted='1'";
-	// 	else if ($show_deleted === 'false')
-	// 		$where = "where is_deleted='0'";
-
-	// 	$data = $this->queryResponse("select id, title from $this->table $where");
-	// 	foreach ($data as $key => $value) {
-	// 		$data[$key]['count'] = $this->queryResponse("select count(id) as 'count' from book where category='" . $data[$key]['id'] . "'");
-	// 		$data[$key]['count'] = $data[$key]['count'][0]['count'];
-	// 	}
-	// 	$this->dataArray = $data;
-	// 	$this->getResponse(200);
-	// }
-
 	public function getItems()
 	{
 		// $this->checkAuth(false);
@@ -234,7 +212,7 @@ class book_prices extends mainController
 		$temp['owner'] = $this->getAdminByIDFn($temp['owner_id']);
 
 		$temp['category'] = $this->getCategoryByIDFn($temp['category']);
-
+		unset($temp['file']);
 		return $temp;
 	}		
 

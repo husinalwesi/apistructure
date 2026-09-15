@@ -42,7 +42,8 @@ class book extends mainController
 			$this->getItems();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('GET')) {
 			$this->getItemBySlug($params[0]);
-			// $this->getItemByID($params[0]);			
+		} elseif (count($params) === 2 && $this->isAllowedMethod('GET')) {
+			$this->getItemFileBySlug($params[1]);
 		} elseif (count($params) === 0 && $this->isAllowedMethod('POST')) {
 			$this->createItem();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('PUT')) {
@@ -110,7 +111,7 @@ class book extends mainController
 		return $data[0];
 	}
 
-	public function getItemBySlugFn($slug, $where = '')
+	public function getItemBySlugFn($slug, $where = '', $specialCase = false)
 	{
 		$querySelectorString = $this->getQuerySelector($this->querySelector);
 		$result = $this->queryResponse("select $querySelectorString from books_with_avg_rate where slug='$slug' $where");
@@ -118,7 +119,7 @@ class book extends mainController
 		if (!$result || count($result) === 0)
 			return null;
 		$data = array();
-		$data = $this->modelAllData($result);
+		$data = $this->modelAllData($result, $specialCase);
 		if (!$data || count($data) === 0)
 			return null;
 		return $data[0];
@@ -141,6 +142,37 @@ class book extends mainController
 
 		return $temp;
 	}
+
+	public function getItemFileBySlug($slug)
+	{
+		$this->checkAuth();
+	    $userID = $this->getUserID();		
+		$result = $this->getItemBySlugFn($slug,'', true);
+		if (!$result) $this->getResponse(404, "No data found for the given Slug.");
+
+		// user is logged in now after checkAuth.
+		// but we need to make sure that the user already buy this book.
+
+		
+		$data = $this->queryResponse("select cart from orders where owner_id = '$userID'");		
+		// later on when payment is ready, we need to add another condition to check the status of the payment also.
+		if(!$data) $this->getResponse(201, 'You have to buy the book first..');
+
+		$booksAlreadyBuyied = array();
+		foreach ($data as $key => $value) {
+			$data[$key]['cart'] = json_decode($data[$key]['cart']);
+			foreach ($data[$key]['cart'] as $key2 => $value2) {			
+				$booksAlreadyBuyied[] = $data[$key]['cart'][$key2]->slug;
+			}
+		}
+
+		if (in_array($slug, $booksAlreadyBuyied, true)) {
+			$this->dataArray = $result['file'];
+			$this->getResponse(200);
+		}
+		
+		$this->getResponse(201, 'You have to buy the book first..');
+	}		
 
 	public function getItemBySlug($slug)
 	{
@@ -385,7 +417,7 @@ class book extends mainController
 		$this->getResponse(200, 'deleted successfully..');
 	}
 
-	public function modelContentData($temp)
+	public function modelContentData($temp, $specialCase = false)
 	{
 
 		$temp['img'] = IMG_BASE_URL . $temp['img'];
@@ -406,7 +438,7 @@ class book extends mainController
 		foreach ($temp['prices'] as $key => $value) {
 			$temp['prices'][$key] = $this->modelPricesData($temp['prices'][$key]);
 		}
-		
+		if(!$specialCase) unset($temp['file']);
 		return $temp;
 	}
 
@@ -424,11 +456,11 @@ class book extends mainController
 		return $temp;
 	}	
 
-	function modelAllData($temp)
+	function modelAllData($temp, $specialCase = false)
 	{
 		$data = array();
 		foreach ($temp as $key => $value) {
-			$data[] = $this->modelContentData($temp[$key]);
+			$data[] = $this->modelContentData($temp[$key], $specialCase);
 		}
 		return $data;
 	}

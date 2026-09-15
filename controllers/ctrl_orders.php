@@ -115,7 +115,7 @@ class orders extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$this->checkRequiredFields(['status', 'payment_response', 'cart']);
+		$this->checkRequiredFields(['status', 'payment_response', 'cart', 'note']);
 
 		$cartJSON = json_decode($payload['fields']['cart']);
 
@@ -141,7 +141,8 @@ class orders extends mainController
 			'owner_id' => $this->getUserID(),
 			'status' => $payload['fields']['status'],			
 			'payment_response' => $payload['fields']['payment_response'],
-			'cart' => json_encode($dataResult, JSON_UNESCAPED_UNICODE)
+			'cart' => json_encode($dataResult, JSON_UNESCAPED_UNICODE),
+			'note' => $payload['fields']['note'],						
 		);		
 
 		if (!$newID = $this->queryInsert($this->table, $params))
@@ -215,15 +216,16 @@ class orders extends mainController
 		$status = $payload['fields']['status'];		
 		$payment_response = $payload['fields']['payment_response'];
 		$cart = $payload['fields']['cart'];
+		$note = $payload['fields']['note'];		
 
-		if (!$status && !$payment_response && !$cart)
+		if (!$status && !$payment_response && !$cart && !$note)
 			$this->getResponse(501, 'there is nothing to be updated!');
 
 		$params = array();
 
 		if ($status) $params['status'] = $payload['fields']['status'];		
 		if ($payment_response) $params['payment_response'] = $payload['fields']['payment_response'];		
-
+		if ($note) $params['note'] = $payload['fields']['note'];		
 		 
 
 		if ($cart) {
@@ -290,6 +292,10 @@ class orders extends mainController
 		unset($temp['owner_id']);
 
 		$temp['cart'] = json_decode($temp['cart']);
+
+		foreach ($temp['cart'] as $key => $value) {
+			unset($temp['cart'][$key]->file);
+		}
 
 		return $temp;
 	}

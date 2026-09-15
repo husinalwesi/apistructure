@@ -223,6 +223,9 @@ class mainController extends main
 
   public function queryResponse($sql, $flag = 1)
   {
+    $sql = strtolower($sql);
+    // $this->dataArray = $sql;
+    // $this->getResponse(200);
     $db = new db();
     $db->setQuery($sql);
     if ($db->getQuery() !== false) {
