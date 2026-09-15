@@ -117,14 +117,32 @@ class orders extends mainController
 
 		$this->checkRequiredFields(['status', 'payment_response', 'cart']);
 
+		$cartJSON = json_decode($payload['fields']['cart']);
+
+		$ids = array_map(function ($item) {
+			return (int) $item->bookid;
+		}, $cartJSON);
+
+		$idsString = implode(',', $ids);
+
+		$dataResult = $this->getBookByListIDsFn(" where id in ($idsString) ");
+
+		foreach ($dataResult as $key => $value) {
+			$dataResult[$key]['qty'] = $cartJSON[$key]->qty;
+		}
+
+		// $this->dataArray = $dataResult;
+		// $this->getResponse(200, json_encode($dataResult));
+		
+
 		$params = array(
 			'id' => '',
 			'created_date' => time(),
 			'owner_id' => $this->getUserID(),
 			'status' => $payload['fields']['status'],			
 			'payment_response' => $payload['fields']['payment_response'],
-			'cart' => $payload['fields']['cart']
-		);
+			'cart' => json_encode($dataResult, JSON_UNESCAPED_UNICODE)
+		);		
 
 		if (!$newID = $this->queryInsert($this->table, $params))
 			$this->getResponse(503, "An Error Occure.");
@@ -134,6 +152,56 @@ class orders extends mainController
 		$this->dataArray = $data;
 		$this->getResponse(200, 'created successfully..');
 	}
+
+
+	public function getBookByListIDsFn($where = '')
+	{
+		$initialData = $this->queryResponse("select * from books_with_avg_rate $where");
+		$data = array();
+		foreach ($initialData as $key => $value) {
+			$data[] = $this->modelBookData($initialData[$key]);
+		}
+		return $data;		
+	}
+
+	public function modelBookData($temp)
+	{
+
+		$temp['img'] = IMG_BASE_URL . $temp['img'];
+		$temp['inner_img'] = IMG_BASE_URL . $temp['inner_img'];			
+
+
+		$temp['index_file'] = IMG_BASE_URL . $temp['index_file'];			
+		$temp['file'] = IMG_BASE_URL . $temp['file'];					
+
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['is_deleted'] = +$temp['is_deleted'] === 1 ? true : false;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner_id']);
+
+		$temp['category'] = $this->getCategoryByIDFn($temp['category']);		
+
+		$temp['prices'] = $this->queryResponse("select * from book_prices where is_deleted = '0' and bookid='".$temp['id']."'");
+
+		foreach ($temp['prices'] as $key => $value) {
+			$temp['prices'][$key] = $this->modelPricesData($temp['prices'][$key]);
+		}
+		
+		return $temp;
+	}	
+
+	public function modelPricesData($temp, $fullPathImage = true)
+	{
+		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
+		$temp['is_deleted'] = +$temp['is_deleted'] === 1;
+		$temp['owner'] = $this->getAdminByIDFn($temp['owner']);
+
+		
+		// $result = $this->queryResponse("select * from book where id='" . $temp['bookid'] . "'");
+		// $temp['book'] = $this->modelBookData($result[0]);
+		unset($temp['bookid']);
+
+		return $temp;
+	}		
 
 	public function updateItem($id)
 	{
@@ -155,7 +223,32 @@ class orders extends mainController
 
 		if ($status) $params['status'] = $payload['fields']['status'];		
 		if ($payment_response) $params['payment_response'] = $payload['fields']['payment_response'];		
-		if ($cart) $params['cart'] = $payload['fields']['cart'];
+
+		 
+
+		if ($cart) {
+			// 
+			$cartJSON = json_decode($cart);
+
+			$ids = array_map(function ($item) {
+				return (int) $item->bookid;
+			}, $cartJSON);
+
+			$idsString = implode(',', $ids);
+
+			$dataResult = $this->getBookByListIDsFn(" where id in ($idsString) ");
+
+			foreach ($dataResult as $key => $value) {
+				$dataResult[$key]['qty'] = $cartJSON[$key]->qty;
+			}
+
+			$params['cart'] = json_encode($dataResult, JSON_UNESCAPED_UNICODE);
+			// 
+		}
+
+
+
+
 
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$id'"))
 			$this->getResponse(503, "An Error Occure.");
@@ -195,6 +288,9 @@ class orders extends mainController
 		$temp['created_date'] = $this->timeStampToDate($temp['created_date']);
 		$temp['owner'] = $this->getAdminByIDFn($temp['owner_id']);
 		unset($temp['owner_id']);
+
+		$temp['cart'] = json_decode($temp['cart']);
+
 		return $temp;
 	}
 
