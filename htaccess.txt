@@ -1,7 +1,8 @@
 .htaccess file in the root
 in mac you can put the file in the xampp/htdocs/.htaccess
 
-containing the following: (to remove and rewrite index.php)
+containing the following: (to remove and rewrite index.php) 
+
 
 RewriteEngine On
 RewriteBase /
