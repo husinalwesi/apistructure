@@ -14,6 +14,7 @@ class book extends mainController
 		'international_number',
 		'publisher',
 		'author',
+		'author_img',
 		'specialization',
 		'publish_year',
 		'page_no',
@@ -223,11 +224,13 @@ class book extends mainController
 		$filesToBeUploaded = array();
 		$filesToBeUploaded['img'] = $payload['files']['img'];
 		$filesToBeUploaded['inner_img'] = $payload['files']['inner_img'];
+		if ($payload['files']['author_img'])
+			$filesToBeUploaded['author_img'] = $payload['files']['author_img'];
 
 		$filesToBeUploaded['file'] = $payload['files']['file'];
-		$filesToBeUploaded['index_file'] = $payload['files']['index_file'];		
+		$filesToBeUploaded['index_file'] = $payload['files']['index_file'];
 
-		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files		
+		$uploadedFilesPaths = $this->uploadMedia($filesToBeUploaded); // to upload files
 
 		$params = array(
 			'id' => '',
@@ -242,11 +245,12 @@ class book extends mainController
 			'international_number' => $payload['fields']['international_number'],
 			'publisher' => $payload['fields']['publisher'],
 			'author' => $payload['fields']['author'],
+			'author_img' => $uploadedFilesPaths['author_img'] ?? '',
 			'specialization' => $payload['fields']['specialization'],
 			'publish_year' => $payload['fields']['publish_year'],
 			'page_no' => $payload['fields']['page_no'],
 			'category' => $payload['fields']['category'],
-			
+
 			'created_date' => time(),
 			'owner_id' => $this->getUserID(),
 			'is_deleted' => '0',
@@ -293,6 +297,8 @@ class book extends mainController
 			$filesToBeUploaded['img'] = $payload['files']['img'];
 		if ($payload['files']['inner_img'])
 			$filesToBeUploaded['inner_img'] = $payload['files']['inner_img'];
+		if ($payload['files']['author_img'])
+			$filesToBeUploaded['author_img'] = $payload['files']['author_img'];
 
 		if ($payload['files']['file'])
 			$filesToBeUploaded['file'] = $payload['files']['file'];
@@ -304,6 +310,7 @@ class book extends mainController
 		if (
 			!$filesToBeUploaded['img'] &&
 			!$filesToBeUploaded['inner_img'] &&
+			!$filesToBeUploaded['author_img'] &&
 			!$filesToBeUploaded['file'] &&
 			!$filesToBeUploaded['index_file'] &&			
 			!$slug &&
@@ -337,8 +344,10 @@ class book extends mainController
 		if ($uploadedFilesPaths['img'])
 			$params['img'] = $uploadedFilesPaths['img'];
 		if ($uploadedFilesPaths['inner_img'])
-			$params['inner_img'] = $uploadedFilesPaths['inner_img'];	
-		
+			$params['inner_img'] = $uploadedFilesPaths['inner_img'];
+		if ($uploadedFilesPaths['author_img'])
+			$params['author_img'] = $uploadedFilesPaths['author_img'];
+
 		if ($uploadedFilesPaths['file'])
 			$params['file'] = $uploadedFilesPaths['file'];	
 
@@ -363,6 +372,11 @@ class book extends mainController
 		if($uploadedFilesPaths['inner_img'] && $ifIDAlreadyExist[0]['inner_img']){
 			// if there is a new image, also there is an old image, so delete the old image file.
 			$this->deleteMedia($ifIDAlreadyExist[0]['inner_img']);
+		}
+
+		if($uploadedFilesPaths['author_img'] && $ifIDAlreadyExist[0]['author_img']){
+			// if there is a new image, also there is an old image, so delete the old image file.
+			$this->deleteMedia($ifIDAlreadyExist[0]['author_img']);
 		}
 
 
@@ -421,7 +435,8 @@ class book extends mainController
 	{
 
 		$temp['img'] = IMG_BASE_URL . $temp['img'];
-		$temp['inner_img'] = IMG_BASE_URL . $temp['inner_img'];			
+		$temp['inner_img'] = IMG_BASE_URL . $temp['inner_img'];
+		$temp['author_img'] = !empty($temp['author_img']) ? IMG_BASE_URL . $temp['author_img'] : '';
 
 
 		$temp['index_file'] = IMG_BASE_URL . $temp['index_file'];			

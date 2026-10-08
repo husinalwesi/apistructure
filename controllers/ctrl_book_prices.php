@@ -201,7 +201,8 @@ class book_prices extends mainController
 	public function modelBookData($temp)
 	{
 		$temp['img'] = IMG_BASE_URL . $temp['img'];
-		$temp['inner_img'] = IMG_BASE_URL . $temp['inner_img'];			
+		$temp['inner_img'] = IMG_BASE_URL . $temp['inner_img'];
+		$temp['author_img'] = !empty($temp['author_img']) ? IMG_BASE_URL . $temp['author_img'] : '';
 
 
 		$temp['index_file'] = IMG_BASE_URL . $temp['index_file'];			
