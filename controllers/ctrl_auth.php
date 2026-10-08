@@ -2,7 +2,7 @@
 class auth extends mainController
 {
 	var $table = "admin";
-	var $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role', 'dob', 'sex', 'phone');
+	var $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role', 'dob', 'sex', 'phone', 'img');
 	public function __construct()
 	{
 		// 		
@@ -224,7 +224,8 @@ class auth extends mainController
 			'role' => $role,
 			'dob' => $dob,
 			'sex' => $sex,
-			'phone' => $phone
+			'phone' => $phone,
+			'img' => ''
 		);
 
 		if (!$newUserID = $this->queryInsert($this->table, $params))
@@ -250,10 +251,27 @@ class auth extends mainController
 		$sex = $payload['fields']['sex'] ?? null;
 		$phone = $payload['fields']['phone'] ?? null;
 
-		if (!$username && !$password && !$role && !$name && !$dob && !$sex && !$phone)
+		$ifIDAlreadyExist = $this->queryResponse("select * from $this->table where CAST(id AS CHAR)='$userID'");
+		if (!$ifIDAlreadyExist)
+			$this->getResponse(404, "No data found for the given ID.");
+
+		$filesToBeUploaded = array();
+		if ($payload['files']['img'])
+			$filesToBeUploaded['img'] = $payload['files']['img'];
+
+		if (!$filesToBeUploaded['img'] && !$username && !$password && !$role && !$name && !$dob && !$sex && !$phone)
 			$this->getResponse(501, 'there is nothing to be updated!');
 
 		$params = array();
+
+		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files
+		if ($uploadedFilesPaths['img']) {
+			$params['img'] = $uploadedFilesPaths['img'];
+			if ($ifIDAlreadyExist[0]['img']) {
+				// if there is a new image, also there is an old image, so delete the old image file.
+				$this->deleteMedia($ifIDAlreadyExist[0]['img']);
+			}
+		}
 
 		if ($username)
 			$params['username'] = $payload['fields']['username'];

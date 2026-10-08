@@ -15,7 +15,7 @@ class main
 
   public function getAdminByIDFn($userID, $where = '')
   {
-    $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role', 'dob', 'sex', 'phone');
+    $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role', 'dob', 'sex', 'phone', 'img');
     $querySelectorString = $this->getQuerySelector($querySelector);
     $result = $this->queryResponse("select $querySelectorString from admin where CAST(id AS CHAR)='$userID' $where");
     if (!$result || count($result) === 0)
@@ -60,6 +60,8 @@ public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
   public function modelAdminData($temp)
   {
     unset($temp['password']);
+    if (!empty($temp['img']))
+      $temp['img'] = IMG_BASE_URL . $temp['img'];
     $temp['created_date'] = $this->timeStampToDate($temp['created_date']);
     $temp['isDeleted'] = +$temp['isDeleted'] === 1 ? true : false;
     return $temp;
