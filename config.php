@@ -1,11 +1,11 @@
 <?php
 
 define("DEFAULT_LANG", "en");
-define("IMG_BASE_URL", "http://localhost:8080/apistructure");
+define("IMG_BASE_URL", "http://localhost:70/apistructure");
 
 // DB CONFIG "LOCALHOST"
 define("DB_HOST", "localhost");
-define("DB_NAME", "fom");
+define("DB_NAME", "daralafaq");
 define("DB_USER", "root");
 define("DB_PASS", "");
 // DB CONFIG "sooq-media.com"

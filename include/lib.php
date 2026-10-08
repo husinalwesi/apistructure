@@ -11,7 +11,7 @@ class db extends MConfig
   public function __construct()
   {
     try {
-      $this->conn = new PDO("mysql:host=$this->db_host;dbname=$this->db_name;charset=utf8", $this->db_user, $this->db_pass);
+      $this->conn = new PDO("mysql:host=$this->db_host;port=3307;dbname=$this->db_name;charset=utf8", $this->db_user, $this->db_pass);
     } catch (PDOException $e) {
       echo "Database Lose Connection";
       exit(0);

@@ -34,7 +34,10 @@ CREATE TABLE `admin` (
   `created_date` int(10) NOT NULL,
   `isDeleted` int(1) NOT NULL,
   `name` text NOT NULL,
-  `role` text NOT NULL
+  `role` text NOT NULL,
+  `dob` date DEFAULT NULL,
+  `sex` enum('male','female') DEFAULT NULL,
+  `phone` varchar(20) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -347,7 +350,7 @@ INSERT INTO `rates` (`id`, `bookid`, `nickname`, `email`, `review`, `created_dat
 --
 DROP TABLE IF EXISTS `books_with_avg_rate`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `books_with_avg_rate`  AS SELECT `b`.`id` AS `id`, `b`.`slug` AS `slug`, `b`.`title` AS `title`, `b`.`short_desc` AS `short_desc`, `b`.`long_desc` AS `long_desc`, `b`.`img` AS `img`, `b`.`inner_img` AS `inner_img`, `b`.`price` AS `price`, `b`.`international_number` AS `international_number`, `b`.`publisher` AS `publisher`, `b`.`author` AS `author`, `b`.`specialization` AS `specialization`, `b`.`publish_year` AS `publish_year`, `b`.`page_no` AS `page_no`, `b`.`category` AS `category`, `b`.`created_date` AS `created_date`, `b`.`owner_id` AS `owner_id`, `b`.`is_deleted` AS `is_deleted`, `b`.`index_file` AS `index_file`, `b`.`file` AS `file`, coalesce(avg(`r`.`rate`),0) AS `avg_rate` FROM (`book` `b` left join `rates` `r` on(`b`.`id` = `r`.`bookid` and `r`.`is_deleted` = 0)) GROUP BY `b`.`id`, `b`.`slug`, `b`.`title`, `b`.`short_desc`, `b`.`long_desc`, `b`.`img`, `b`.`inner_img`, `b`.`price`, `b`.`international_number`, `b`.`publisher`, `b`.`author`, `b`.`specialization`, `b`.`publish_year`, `b`.`page_no`, `b`.`category`, `b`.`created_date`, `b`.`owner_id`, `b`.`is_deleted`, `b`.`index_file`, `b`.`file` ;
+CREATE VIEW `books_with_avg_rate`  AS SELECT `b`.`id` AS `id`, `b`.`slug` AS `slug`, `b`.`title` AS `title`, `b`.`short_desc` AS `short_desc`, `b`.`long_desc` AS `long_desc`, `b`.`img` AS `img`, `b`.`inner_img` AS `inner_img`, `b`.`price` AS `price`, `b`.`international_number` AS `international_number`, `b`.`publisher` AS `publisher`, `b`.`author` AS `author`, `b`.`specialization` AS `specialization`, `b`.`publish_year` AS `publish_year`, `b`.`page_no` AS `page_no`, `b`.`category` AS `category`, `b`.`created_date` AS `created_date`, `b`.`owner_id` AS `owner_id`, `b`.`is_deleted` AS `is_deleted`, `b`.`index_file` AS `index_file`, `b`.`file` AS `file`, coalesce(avg(`r`.`rate`),0) AS `avg_rate` FROM (`book` `b` left join `rates` `r` on(`b`.`id` = `r`.`bookid` and `r`.`is_deleted` = 0)) GROUP BY `b`.`id`, `b`.`slug`, `b`.`title`, `b`.`short_desc`, `b`.`long_desc`, `b`.`img`, `b`.`inner_img`, `b`.`price`, `b`.`international_number`, `b`.`publisher`, `b`.`author`, `b`.`specialization`, `b`.`publish_year`, `b`.`page_no`, `b`.`category`, `b`.`created_date`, `b`.`owner_id`, `b`.`is_deleted`, `b`.`index_file`, `b`.`file` ;
 
 --
 -- Indexes for dumped tables

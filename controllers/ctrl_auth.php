@@ -2,7 +2,7 @@
 class auth extends mainController
 {
 	var $table = "admin";
-	var $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role');
+	var $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role', 'dob', 'sex', 'phone');
 	public function __construct()
 	{
 		// 		
@@ -85,7 +85,8 @@ class auth extends mainController
 		$password = md5($payload['fields']['password']);
 		$role = $payload['fields']['role'];		
 
-		$data = $this->queryResponse("select * from $this->table where username='$username' and password='$password' and isDeleted='0' and role='$role'");
+		// and role='$role'
+		$data = $this->queryResponse("select * from $this->table where username='$username' and password='$password' and isDeleted='0' ");
 		if ($data) {
 			// $this->createLog($data[0]['id'], 'signin');
 			// 
@@ -203,7 +204,10 @@ class auth extends mainController
 
 		$username = $payload['fields']['username'];
 		$name = $payload['fields']['name'];		
-		$role = $payload['fields']['role'];				
+		$role = $payload['fields']['role'];
+		$dob = $payload['fields']['dob'] ?? null;
+		$sex = $payload['fields']['sex'] ?? null;
+		$phone = $payload['fields']['phone'] ?? '';
 
 
 		$ifUsernameAlreadyExist = $this->queryResponse("select * from $this->table where username='$username'");
@@ -217,7 +221,10 @@ class auth extends mainController
 			'name' => $name,			
 			'created_date' => time(),
 			'isDeleted' => '0',
-			'role' => $role
+			'role' => $role,
+			'dob' => $dob,
+			'sex' => $sex,
+			'phone' => $phone
 		);
 
 		if (!$newUserID = $this->queryInsert($this->table, $params))
@@ -238,9 +245,12 @@ class auth extends mainController
 		$username = $payload['fields']['username'];
 		$name = $payload['fields']['name'];		
 		$password = $payload['fields']['password'];
-		$role = $payload['fields']['role'];		
-		
-		if (!$username && !$password && !$role)
+		$role = $payload['fields']['role'];
+		$dob = $payload['fields']['dob'] ?? null;
+		$sex = $payload['fields']['sex'] ?? null;
+		$phone = $payload['fields']['phone'] ?? null;
+
+		if (!$username && !$password && !$role && !$name && !$dob && !$sex && !$phone)
 			$this->getResponse(501, 'there is nothing to be updated!');
 
 		$params = array();
@@ -252,7 +262,13 @@ class auth extends mainController
 		if ($name)
 			$params['name'] = $payload['fields']['name'];
 		if ($role)
-			$params['role'] = $payload['fields']['role'];		
+			$params['role'] = $payload['fields']['role'];
+		if ($dob)
+			$params['dob'] = $dob;
+		if ($sex)
+			$params['sex'] = $sex;
+		if ($phone)
+			$params['phone'] = $phone;
 
 
 		if (!$this->queryUpdate($this->table, $params, "where CAST(id AS CHAR)='$userID'"))

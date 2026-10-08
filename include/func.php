@@ -15,7 +15,7 @@ class main
 
   public function getAdminByIDFn($userID, $where = '')
   {
-    $querySelector = array('id', 'username', 'password', 'createdDate', 'isDeleted');
+    $querySelector = array('id', 'username', 'password', 'created_date', 'isDeleted', 'name', 'role', 'dob', 'sex', 'phone');
     $querySelectorString = $this->getQuerySelector($querySelector);
     $result = $this->queryResponse("select $querySelectorString from admin where CAST(id AS CHAR)='$userID' $where");
     if (!$result || count($result) === 0)
