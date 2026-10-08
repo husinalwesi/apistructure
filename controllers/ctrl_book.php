@@ -41,6 +41,8 @@ class book extends mainController
 		$params = $this->extractUrlParams();
 		if (count($params) === 0 && $this->isAllowedMethod('GET')) {
 			$this->getItems();
+		} elseif ($params[0] === 'years' && count($params) === 1 && $this->isAllowedMethod('GET')) {
+			$this->getYears();
 		} elseif (count($params) === 1 && $this->isAllowedMethod('GET')) {
 			$this->getItemBySlug($params[0]);
 		} elseif (count($params) === 2 && $this->isAllowedMethod('GET')) {
@@ -98,6 +100,17 @@ class book extends mainController
 		$this->getResponse(200);
 	}
 
+
+	public function getYears()
+	{
+		$result = $this->queryResponse("select distinct publish_year from $this->table where is_deleted='0' order by publish_year desc");
+		$years = array();
+		foreach ($result as $row) {
+			$years[] = (int) $row['publish_year'];
+		}
+		$this->dataArray = array_values(array_unique($years)); // guarantee no duplicates
+		$this->getResponse(200);
+	}
 
 	public function getItemByIDFn($id, $where = '')
 	{
