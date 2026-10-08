@@ -233,10 +233,13 @@ class rates extends mainController
 			$temp['user']['nickname'] = $userDetails['name'];
 			$temp['user']['email'] = $userDetails['username'];
 			$temp['user']['userid'] = $temp['userid'];
+			// getAdminByIDFn already returns img as a full url (or empty string)
+			$temp['user']['img'] = $userDetails['img'] ?? '';
 		}else{
 			$temp['user']['nickname'] = $temp['nickname'];
 			$temp['user']['email'] = $temp['email'];
-			$temp['user']['userid'] = null;			
+			$temp['user']['userid'] = null;
+			$temp['user']['img'] = '';
 		}
 			unset($temp['nickname']);
 			unset($temp['email']);
