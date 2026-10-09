@@ -5,6 +5,9 @@ class content extends mainController
 	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date', 'owner', 'isDeleted');
 	// title-only content rows (value stored in `title`)
 	var $heroTextSlugs = array('hero_title', 'hero_desc', 'hero_search_placeholder', 'hero_list_count', 'hero_extra');
+	var $homeTextSlugs = array('aboutus_list', 'years_of_experience', 'special_book_title', 'events_title', 'events_desc', 'contactus_title', 'contactus_desc', 'book_categories_title');
+	// title-only rows stored as a JSON string, returned decoded
+	var $jsonSlugs = array('hero_list_count', 'aboutus_list');
 	// title-only rows holding an uploaded file path
 	var $imageSlugs = array('hero_img', 'logo', 'logo_inverse');
 	public function __construct()
@@ -153,9 +156,16 @@ class content extends mainController
 			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
 			$result['hero'][$slug] = $item ? $item['title'] : '';
 		}
-		// stored as a JSON string, return it decoded
-		$decoded = json_decode($result['hero']['hero_list_count'], true);
-		if (json_last_error() === JSON_ERROR_NONE && $decoded !== null) $result['hero']['hero_list_count'] = $decoded;
+		$result['home'] = array();
+		foreach ($this->homeTextSlugs as $slug) {
+			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
+			$result['home'][$slug] = $item ? $item['title'] : '';
+		}
+		foreach ($this->jsonSlugs as $slug) {
+			$group = isset($result['hero'][$slug]) ? 'hero' : 'home';
+			$decoded = json_decode($result[$group][$slug], true);
+			if (json_last_error() === JSON_ERROR_NONE && $decoded !== null) $result[$group][$slug] = $decoded;
+		}
 		foreach ($this->imageSlugs as $slug) {
 			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
 			$result['hero'][$slug] = ($item && $item['title']) ? IMG_BASE_URL . $item['title'] : '';
@@ -355,7 +365,7 @@ class content extends mainController
 		}
 
 		$titleOnlyValues = array();
-		foreach (array_merge($this->heroTextSlugs, array('footer_desc')) as $slug) {
+		foreach (array_merge($this->heroTextSlugs, $this->homeTextSlugs, array('footer_desc')) as $slug) {
 			if (isset($payload['fields'][$slug]) && $payload['fields'][$slug] !== '') $titleOnlyValues[$slug] = $payload['fields'][$slug];
 		}
 
