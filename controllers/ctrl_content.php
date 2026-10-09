@@ -102,11 +102,11 @@ class content extends mainController
 
 		$data = array();
 
-		$temp = array('phone','mobile','email', 'map');
+		$temp = array('phone','mobile','email', 'map', 'location_txt');
 
-		foreach ($temp as $key => $value) {			
+		foreach ($temp as $key => $value) {
 			$data[$temp[$key]] = $this->getItemBySlugFn($temp[$key], " and isDeleted='0'");
-			$data[$temp[$key]] = $data[$temp[$key]]['title'];			
+			$data[$temp[$key]] = $data[$temp[$key]]['title'];
 		}
 
 		$map = $data['map'];
@@ -115,8 +115,8 @@ class content extends mainController
 		$data['map']['latlng'] = $map;
 		$mapSplitted = explode(',', $map);
 		$data['map']['lat'] = $mapSplitted[0];
-		$data['map']['lng'] = $mapSplitted[1];		
-		// 
+		$data['map']['lng'] = $mapSplitted[1];
+		//
 		// 
 		// 
 		// $this->checkAuth();
@@ -176,11 +176,11 @@ class content extends mainController
 		// $this->checkAuth();
 		$data = array();
 
-		$temp = array('phone','mobile','email', 'map');
+		$temp = array('phone','mobile','email', 'map', 'location_txt');
 
-		foreach ($temp as $key => $value) {			
+		foreach ($temp as $key => $value) {
 			$data[$temp[$key]] = $this->getItemBySlugFn($temp[$key], " and isDeleted='0'");
-			$data[$temp[$key]] = $data[$temp[$key]]['title'];			
+			$data[$temp[$key]] = $data[$temp[$key]]['title'];
 		}
 
 		$map = $data['map'];
@@ -189,7 +189,7 @@ class content extends mainController
 		$data['map']['latlng'] = $map;
 		$mapSplitted = explode(',', $map);
 		$data['map']['lat'] = $mapSplitted[0];
-		$data['map']['lng'] = $mapSplitted[1];		
+		$data['map']['lng'] = $mapSplitted[1];
 
 		$this->dataArray = $data;
 		$this->getResponse(200);			
@@ -301,6 +301,7 @@ class content extends mainController
 		$mobile = $payload['fields']['mobile'];
 		$email = $payload['fields']['email'];
 		$maplatlng = $payload['fields']['maplatlng'];
+		$location_txt = $payload['fields']['location_txt'];
 		$google = $payload['fields']['google'];
 		$x = $payload['fields']['x'];
 		$whatsapp = $payload['fields']['whatsapp'];
@@ -336,6 +337,7 @@ class content extends mainController
 			!$mobile &&
 			!$email &&
 			!$maplatlng &&
+			!$location_txt &&
 			!$google &&
 			!$x &&
 			!$whatsapp &&
@@ -418,6 +420,12 @@ class content extends mainController
 			$params = array();
 			$params['title'] = $maplatlng;
 			if (!$this->queryUpdate($this->table, $params, "where slug='map'")) $this->getResponse(503, "An Error Occure.");
+		}
+
+		if ($location_txt) {
+			$params = array();
+			$params['title'] = $location_txt;
+			if (!$this->queryUpdate($this->table, $params, "where slug='location_txt'")) $this->getResponse(503, "An Error Occure.");
 		}
 
 		if ($google) {
