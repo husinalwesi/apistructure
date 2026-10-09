@@ -3,6 +3,10 @@ class content extends mainController
 {
 	var $table = "content";
 	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date', 'owner', 'isDeleted');
+	// title-only content rows (value stored in `title`)
+	var $heroTextSlugs = array('hero_title', 'hero_desc', 'hero_search_placeholder', 'hero_list_count', 'hero_extra');
+	// title-only rows holding an uploaded file path
+	var $imageSlugs = array('hero_img', 'logo', 'logo_inverse');
 	public function __construct()
 	{
 		// 		
@@ -142,7 +146,22 @@ class content extends mainController
 		$result['contact'] = $data;
 		$result['social'] = $data2;	
 
-		$result['info'] = $data4;			
+		$result['info'] = $data4;
+
+		$result['hero'] = array();
+		foreach ($this->heroTextSlugs as $slug) {
+			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
+			$result['hero'][$slug] = $item ? $item['title'] : '';
+		}
+		// stored as a JSON string, return it decoded
+		$decoded = json_decode($result['hero']['hero_list_count'], true);
+		if (json_last_error() === JSON_ERROR_NONE && $decoded !== null) $result['hero']['hero_list_count'] = $decoded;
+		foreach ($this->imageSlugs as $slug) {
+			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
+			$result['hero'][$slug] = ($item && $item['title']) ? IMG_BASE_URL . $item['title'] : '';
+		}
+		$footer = $this->getItemBySlugFn('footer_desc', " and isDeleted='0'");
+		$result['hero']['footer_desc'] = $footer ? $footer['title'] : '';
 
 		$result['general'] = array();
 		$result['general']['short_info'] = array();
@@ -330,9 +349,24 @@ class content extends mainController
 		$filesToBeUploaded = array();
 		if ($payload['files']['company_profile']) $filesToBeUploaded['company_profile'] = $payload['files']['company_profile'];
 		if ($payload['files']['book_list_download']) $filesToBeUploaded['book_list_download'] = $payload['files']['book_list_download'];
-		if ($payload['files']['book_list_view']) $filesToBeUploaded['book_list_view'] = $payload['files']['book_list_view'];		
+		if ($payload['files']['book_list_view']) $filesToBeUploaded['book_list_view'] = $payload['files']['book_list_view'];
+		foreach ($this->imageSlugs as $slug) {
+			if ($payload['files'][$slug]) $filesToBeUploaded[$slug] = $payload['files'][$slug];
+		}
+
+		$titleOnlyValues = array();
+		foreach (array_merge($this->heroTextSlugs, array('footer_desc')) as $slug) {
+			if (isset($payload['fields'][$slug]) && $payload['fields'][$slug] !== '') $titleOnlyValues[$slug] = $payload['fields'][$slug];
+		}
+
+		if (empty($titleOnlyValues) && count(array_intersect_key($filesToBeUploaded, array_flip($this->imageSlugs))) === 0) {
+			$extraProvided = false;
+		} else {
+			$extraProvided = true;
+		}
 
 		if (
+			!$extraProvided &&
 			!$phone &&
 			!$mobile &&
 			!$email &&
@@ -398,8 +432,24 @@ class content extends mainController
 		}
 
 
+		foreach ($this->imageSlugs as $slug) {
+			if ($uploadedFilesPaths[$slug]) {
+				$savedData = $this->queryResponse("select title from $this->table where slug='$slug'");
+				$this->deleteMedia($savedData[0]['title']);
+				$params = array();
+				$params['title'] = $uploadedFilesPaths[$slug];
+				if (!$this->queryUpdate($this->table, $params, "where slug='$slug'")) $this->getResponse(503, "An Error Occure.");
+			}
+		}
+
+		foreach ($titleOnlyValues as $slug => $value) {
+			$params = array();
+			$params['title'] = $value;
+			if (!$this->queryUpdate($this->table, $params, "where slug='$slug'")) $this->getResponse(503, "An Error Occure.");
+		}
+
 		if($phone){
-			$params = array();		
+			$params = array();
 			$params['title'] = $phone;
 			if (!$this->queryUpdate($this->table, $params, "where slug='phone'")) $this->getResponse(503, "An Error Occure.");			
 		}
