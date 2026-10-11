@@ -5,11 +5,11 @@ class content extends mainController
 	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date', 'owner', 'isDeleted');
 	// title-only content rows (value stored in `title`)
 	var $heroTextSlugs = array('hero_title', 'hero_desc', 'hero_search_placeholder', 'hero_list_count', 'hero_extra');
-	var $homeTextSlugs = array('aboutus_list', 'years_of_experience', 'special_book_title', 'events_title', 'events_desc', 'contactus_title', 'contactus_desc', 'book_categories_title', 'our_message_title', 'our_message_list', 'about_counters', 'categories_page_title', 'books_page_title');
+	var $homeTextSlugs = array('aboutus_list', 'years_of_experience', 'special_book_title', 'events_title', 'events_desc', 'contactus_title', 'contactus_desc', 'book_categories_title', 'our_message_title', 'our_message_list', 'about_counters', 'categories_page_title', 'books_page_title', 'event_page_title', 'contact_page_title', 'booklist_txt', 'search_page_title', 'signin_page_title', 'signup_page_title', 'signup_section_title', 'signup_section_desc', 'signup_section_submit_btn_text', 'signin_section_title', 'signin_section_desc', 'signin_section_submit_btn_text', 'forget_section_title', 'forget_section_desc', 'forget_section_submit_btn_text', 'signin_section_forget_btn', 'forget_section_back_btn_text', 'signup_page_subtitle', 'signup_page_subtitle_subtitle', 'cart_page_title', 'checkout_page_title', 'header_menu');
 	// title-only rows stored as a JSON string, returned decoded
-	var $jsonSlugs = array('hero_list_count', 'aboutus_list', 'our_message_list', 'about_counters');
+	var $jsonSlugs = array('hero_list_count', 'aboutus_list', 'our_message_list', 'about_counters', 'header_menu');
 	// title-only rows holding an uploaded file path
-	var $imageSlugs = array('hero_img', 'logo', 'logo_inverse', 'aboutus_bg', 'aboutus_right_img', 'aboutus_left_img', 'categories_page_img', 'books_page_img');
+	var $imageSlugs = array('hero_img', 'logo', 'logo_inverse', 'aboutus_bg', 'aboutus_right_img', 'aboutus_left_img', 'categories_page_img', 'books_page_img', 'event_page_img', 'contact_page_img', 'search_page_img', 'signin_page_img', 'signup_page_img', 'privacy_policy_img', 'orders-payments-delivery_img', 'refund-returns-policy_img', 'cart_page_img', 'checkout_page_img');
 	public function __construct()
 	{
 		// 		
@@ -161,10 +161,34 @@ class content extends mainController
 			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
 			$result['home'][$slug] = $item ? $item['title'] : '';
 		}
+		// booklist_txt is stored with book-list-view / book-list-download tokens (e.g. as the hrefs); swap in the live file links
+		// (an optional [ ] around a token is dropped, so the output is the bare URL)
+		$bookListLinks = array(
+			'book-list-download' => $data4['book-list-download'],
+			'book-list-view' => $data4['book-list-view'],
+			'book-download' => $data4['book-list-download'],
+			'book-list' => $data4['book-list-view'],
+		);
+		$result['home']['booklist_txt'] = preg_replace_callback(
+			'/\[?(book-list-download|book-list-view|book-download|book-list)\]?/',
+			function ($m) use ($bookListLinks) { return $bookListLinks[$m[1]]; },
+			$result['home']['booklist_txt']
+		);
 		foreach ($this->jsonSlugs as $slug) {
 			$group = isset($result['hero'][$slug]) ? 'hero' : 'home';
 			$decoded = json_decode($result[$group][$slug], true);
 			if (json_last_error() === JSON_ERROR_NONE && $decoded !== null) $result[$group][$slug] = $decoded;
+		}
+		// header_menu: the "categories" item gets its children from the category table
+		if (is_array($result['home']['header_menu'])) {
+			$categories = $this->queryResponse("select slug, title from category where isDeleted='0' order by created_date desc");
+			$children = array();
+			foreach ((array) $categories as $category) {
+				$children[] = array('title' => $category['title'], 'href' => 'books?category=' . $category['slug']);
+			}
+			foreach ($result['home']['header_menu'] as $i => $menuItem) {
+				if ($menuItem['href'] === 'categories') $result['home']['header_menu'][$i]['children'] = $children;
+			}
 		}
 		foreach ($this->imageSlugs as $slug) {
 			$item = $this->getItemBySlugFn($slug, " and isDeleted='0'");
