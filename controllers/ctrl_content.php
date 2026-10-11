@@ -5,11 +5,11 @@ class content extends mainController
 	var $querySelector = array('id', 'slug', 'title', 'body', 'created_date', 'owner', 'isDeleted');
 	// title-only content rows (value stored in `title`)
 	var $heroTextSlugs = array('hero_title', 'hero_desc', 'hero_search_placeholder', 'hero_list_count', 'hero_extra');
-	var $homeTextSlugs = array('aboutus_list', 'years_of_experience', 'special_book_title', 'events_title', 'events_desc', 'contactus_title', 'contactus_desc', 'book_categories_title', 'our_message_title', 'our_message_list', 'about_counters');
+	var $homeTextSlugs = array('aboutus_list', 'years_of_experience', 'special_book_title', 'events_title', 'events_desc', 'contactus_title', 'contactus_desc', 'book_categories_title', 'our_message_title', 'our_message_list', 'about_counters', 'categories_page_title', 'books_page_title');
 	// title-only rows stored as a JSON string, returned decoded
 	var $jsonSlugs = array('hero_list_count', 'aboutus_list', 'our_message_list', 'about_counters');
 	// title-only rows holding an uploaded file path
-	var $imageSlugs = array('hero_img', 'logo', 'logo_inverse');
+	var $imageSlugs = array('hero_img', 'logo', 'logo_inverse', 'aboutus_bg', 'aboutus_right_img', 'aboutus_left_img', 'categories_page_img', 'books_page_img');
 	public function __construct()
 	{
 		// 		
