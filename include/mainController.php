@@ -215,7 +215,7 @@ class mainController extends main
 
   public function translate($str)
   {
-    $lang = $this->getCurrentLang();
+    $lang = 'ar';
 
     $translations = $this->getTranslationFiles();
     return $translations[$lang][$str] ?? $str;

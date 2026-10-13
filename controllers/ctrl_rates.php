@@ -141,7 +141,7 @@ class rates extends mainController
 				($payload['fields']['nickname'] && $payload['fields']['email'] && !$payload['fields']['userid'])
 			)
 		) {
-			$this->getResponse(501, "Missing required field(s): {nickname, email, userid}");
+			$this->getResponse(501, $this->translate("Missing required field(s):") . " {nickname, email, userid}");
 		}
 
 		$params = array(

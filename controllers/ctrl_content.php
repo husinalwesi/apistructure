@@ -350,42 +350,42 @@ class content extends mainController
 		$this->checkAuth();
 		$payload = $this->getRequestData();
 
-		$phone = $payload['fields']['phone'];
-		$mobile = $payload['fields']['mobile'];
-		$email = $payload['fields']['email'];
-		$maplatlng = $payload['fields']['maplatlng'];
-		$location_txt = $payload['fields']['location_txt'];
-		$google = $payload['fields']['google'];
-		$x = $payload['fields']['x'];
-		$whatsapp = $payload['fields']['whatsapp'];
-		$instagram = $payload['fields']['instagram'];
-		$linkedin = $payload['fields']['linkedin'];
-		$facebook = $payload['fields']['facebook'];
+		$phone = ($payload['fields']['phone'] ?? null);
+		$mobile = ($payload['fields']['mobile'] ?? null);
+		$email = ($payload['fields']['email'] ?? null);
+		$maplatlng = ($payload['fields']['maplatlng'] ?? null);
+		$location_txt = ($payload['fields']['location_txt'] ?? null);
+		$google = ($payload['fields']['google'] ?? null);
+		$x = ($payload['fields']['x'] ?? null);
+		$whatsapp = ($payload['fields']['whatsapp'] ?? null);
+		$instagram = ($payload['fields']['instagram'] ?? null);
+		$linkedin = ($payload['fields']['linkedin'] ?? null);
+		$facebook = ($payload['fields']['facebook'] ?? null);
 
-		$short_info_title = $payload['fields']['short_info_title'];
-		$short_info_desc = $payload['fields']['short_info_desc'];
+		$short_info_title = ($payload['fields']['short_info_title'] ?? null);
+		$short_info_desc = ($payload['fields']['short_info_desc'] ?? null);
 
-		$about_title = $payload['fields']['about_title'];
-		$about_desc = $payload['fields']['about_desc'];
+		$about_title = ($payload['fields']['about_title'] ?? null);
+		$about_desc = ($payload['fields']['about_desc'] ?? null);
 
-		$copyright = $payload['fields']['copyright'];
+		$copyright = ($payload['fields']['copyright'] ?? null);
 
-		$privacy_title = $payload['fields']['privacy_title'];
-		$privacy_desc = $payload['fields']['privacy_desc'];
+		$privacy_title = ($payload['fields']['privacy_title'] ?? null);
+		$privacy_desc = ($payload['fields']['privacy_desc'] ?? null);
 
-		$order_payment_title = $payload['fields']['order_payment_title'];
-		$order_payment_desc = $payload['fields']['order_payment_desc'];
+		$order_payment_title = ($payload['fields']['order_payment_title'] ?? null);
+		$order_payment_desc = ($payload['fields']['order_payment_desc'] ?? null);
 
-		$refund_title = $payload['fields']['refund_title'];
-		$refund_desc = $payload['fields']['refund_desc'];
+		$refund_title = ($payload['fields']['refund_title'] ?? null);
+		$refund_desc = ($payload['fields']['refund_desc'] ?? null);
 
 
 		$filesToBeUploaded = array();
-		if ($payload['files']['company_profile']) $filesToBeUploaded['company_profile'] = $payload['files']['company_profile'];
-		if ($payload['files']['book_list_download']) $filesToBeUploaded['book_list_download'] = $payload['files']['book_list_download'];
-		if ($payload['files']['book_list_view']) $filesToBeUploaded['book_list_view'] = $payload['files']['book_list_view'];
+		if (($payload['files']['company_profile'] ?? null)) $filesToBeUploaded['company_profile'] = ($payload['files']['company_profile'] ?? null);
+		if (($payload['files']['book_list_download'] ?? null)) $filesToBeUploaded['book_list_download'] = ($payload['files']['book_list_download'] ?? null);
+		if (($payload['files']['book_list_view'] ?? null)) $filesToBeUploaded['book_list_view'] = ($payload['files']['book_list_view'] ?? null);
 		foreach ($this->imageSlugs as $slug) {
-			if ($payload['files'][$slug]) $filesToBeUploaded[$slug] = $payload['files'][$slug];
+			if (($payload['files'][$slug] ?? null)) $filesToBeUploaded[$slug] = ($payload['files'][$slug] ?? null);
 		}
 
 		$titleOnlyValues = array();
@@ -423,16 +423,16 @@ class content extends mainController
 			!$order_payment_desc &&
 			!$refund_title &&
 			!$refund_desc &&
-			!$filesToBeUploaded['company_profile'] &&
-			!$filesToBeUploaded['book_list_download'] &&
-			!$filesToBeUploaded['book_list_view']
+			!isset($filesToBeUploaded['company_profile']) &&
+			!isset($filesToBeUploaded['book_list_download']) &&
+			!isset($filesToBeUploaded['book_list_view'])
 		) {
 			$this->getResponse(203, "No data provided.");
 		}
 
 		$uploadedFilesPaths = $this->uploadMediaPut($filesToBeUploaded); // to upload files				
 
-		if($uploadedFilesPaths['company_profile']){
+		if(!empty($uploadedFilesPaths['company_profile'])){
 			// 
 			$savedData = $this->queryResponse("select title from $this->table where slug='company_profile'");
 			$previousFilePath = $savedData[0]['title'];
@@ -443,7 +443,7 @@ class content extends mainController
 			if (!$this->queryUpdate($this->table, $params, "where slug='company_profile'")) $this->getResponse(503, "An Error Occure.");			
 		}
 
-		if($uploadedFilesPaths['book_list_download']){
+		if(!empty($uploadedFilesPaths['book_list_download'])){
 			// 
 			$savedData = $this->queryResponse("select title from $this->table where slug='book-list-download'");
 			$previousFilePath = $savedData[0]['title'];
@@ -454,7 +454,7 @@ class content extends mainController
 			if (!$this->queryUpdate($this->table, $params, "where slug='book-list-download'")) $this->getResponse(503, "An Error Occure.");			
 		}
 		
-		if($uploadedFilesPaths['book_list_view']){
+		if(!empty($uploadedFilesPaths['book_list_view'])){
 			// 
 			$savedData = $this->queryResponse("select title from $this->table where slug='book-list-view'");
 			$previousFilePath = $savedData[0]['title'];
@@ -467,7 +467,7 @@ class content extends mainController
 
 
 		foreach ($this->imageSlugs as $slug) {
-			if ($uploadedFilesPaths[$slug]) {
+			if (!empty($uploadedFilesPaths[$slug])) {
 				$savedData = $this->queryResponse("select title from $this->table where slug='$slug'");
 				$this->deleteMedia($savedData[0]['title']);
 				$params = array();

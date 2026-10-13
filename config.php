@@ -1,6 +1,6 @@
 <?php
 
-define("DEFAULT_LANG", "en");
+define("DEFAULT_LANG", "ar");
 define("IMG_BASE_URL", "http://localhost:70/apistructure");
 
 // DB CONFIG "LOCALHOST"

@@ -230,7 +230,7 @@ public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
     // If there are missing fields, return a formatted response and stop execution
     if (!empty($missingFields)) {
       $missingList = '`' . implode('`, `', $missingFields) . '`';
-      $this->getResponse(501, "Missing required field(s): {$missingList}");
+      $this->getResponse(501, $this->translate("Missing required field(s):") . " {$missingList}");
     }
     return true;
   }
@@ -250,7 +250,7 @@ public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
     // If there are missing fields, return a formatted response and stop execution
     if (!empty($missingFields)) {
       $missingList = '`' . implode('`, `', $missingFields) . '`';
-      $this->getResponse(501, "Missing required file(s): {$missingList}");
+      $this->getResponse(501, $this->translate("Missing required file(s):") . " {$missingList}");
     }
     return true;
   }  
@@ -278,7 +278,7 @@ public function getCategoryByIDFn($id, $where = '', $fullPathImage = true)
   //   // Respond with clear error message if any field is missing
   //   if (!empty($missingFields)) {
   //     $missingList = '`' . implode('`, `', $missingFields) . '`';
-  //     $this->getResponse(501, "Missing required field(s): {$missingList}");
+  //     $this->getResponse(501, $this->translate("Missing required field(s):") . " {$missingList}");
   //   }
   // }
 
